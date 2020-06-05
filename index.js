@@ -10,7 +10,6 @@ const delay = require("delay");
 let urlen = require("urlencode"); 
 const puppeteer = require("puppeteer"); 
 const cheerio = require("cheerio");
-const corona = require("./CoronaService/covid19.js"); 
 const SESSION_FILE_PATH = "./session.json";
 // file is included here
 let sessionCfg;
@@ -790,79 +789,6 @@ More features is cooming soon
         }
       });
     }
-  } else if (msg.body === "!coronaOld") {
-    fs.readFile("./CoronaService/data.json", "utf-8", function(err, data) {
-      if (err) throw err;
-      const localData = JSON.parse(data);
-      const newCases = localData.NewCases === "" ? 0 : localData.NewCases;
-      const newDeaths = localData.NewDeaths === "" ? 0 : localData.NewDeaths;
-      client.sendMessage(
-        msg.from,
-        `                *COVID-19 Update!!*
-Negara: ${localData.Country}
-
-*Kasus aktif: ${localData.ActiveCases}*
-*Total Kasus: ${localData.TotalCases}*
-Kasus Baru: ${newCases}
-
-*Meninggal: ${localData.TotalDeaths}*
-Meninggal Baru: ${newDeaths}
-
-*Total Sembuh: ${localData.TotalRecovered}*
-            
-Sumber: _https://www.worldometers.info/coronavirus/_
-            `
-      );
-      var imageAsBase64 = fs.readFileSync(
-        "./CoronaService/corona.png",
-        "base64"
-      );
-      var CoronaImage = new MessageMedia("image/png", imageAsBase64);
-      client.sendMessage(msg.from, CoronaImage);
-    });
-  } else if (
-    msg.body === "corona" ||
-    msg.body === "Corona" ||
-    msg.body === "/corona"
-  ) {
-    corona.getAll().then(result => {
-      var aktifIndo =
-        result[0].confirmed - result[0].recovered - result[0].deaths;
-      // var aktifGlob = result[1].confirmed - result[1].recovered - result[1].
-      // Kasus *Global*
-      // Total Kasus: ${result[1].confirmed}
-      // Kasus aktif: ${aktifGlob}
-      // Sembuh: ${result[1].recovered}
-      // Meninggal: ${result[1].deaths}
-      // Update Pada:
-      // ${result[1].lastUpdate}
-      client.sendMessage(
-        msg.from,
-        `
-                    *COVID-19 Update!!*
-
-Kasus *Indonesia* 🇮🇩
-
-😞 Total Kasus: ${result[0].confirmed}
-😷 Kasus aktif: ${aktifIndo}
-😊 Sembuh: ${result[0].recovered}
-😭 Meninggal: ${result[0].deaths}
-
-🕓 Update Pada: 
-${result[0].lastUpdate.replace("pukul", "|")} WIB
-     
-
-Stay safe ya semuanya , jaga kesehatan nya masing masing`
-      );
-      var imageAsBase64 = fs.readFileSync(
-        "./CoronaService/corona.png",
-        "base64"
-      );
-      var CoronaImage = new MessageMedia("image/png", imageAsBase64);
-      client.sendMessage(msg.from, CoronaImage);
-    });
-
-    // ============================================= Groups
   } else if (msg.body.startsWith("!subject ")) {
     // Change the group subject
     let chat = await msg.getChat();
@@ -958,40 +884,7 @@ listen.on("message", (topic, message) => {
         console.log(
           `[ ${moment().format("HH:mm:ss")} ] Send Corona Update to ${number}`
         );
-        if (message.toString() === "New Update!") {
-          fs.readFile("./CoronaService/data.json", "utf-8", function(
-            err,
-            data
-          ) {
-            if (err) throw err;
-            const localData = JSON.parse(data);
-            const newCases = localData.NewCases === "" ? 0 : localData.NewCases;
-            const newDeaths =
-              localData.NewDeaths === "" ? 0 : localData.NewDeaths;
-            client.sendMessage(
-              number,
-              `
-                    *COVID-19 Update!!*
-Negara: ${localData.Country}
-
-Kasus aktif: ${localData.ActiveCases}
-Total Kasus: ${localData.TotalCases}
-*Kasus Baru: ${newCases}*
         
-Meninggal: ${localData.TotalDeaths}
-*Meninggal Baru: ${newDeaths}*
-        
-Total Sembuh: ${localData.TotalRecovered}
-                    
-Dicek pada: ${moment()
-                .format("LLLL")
-                .replace("pukul", "|")} WIB
-Sumber: 
-_https://www.worldometers.info/coronavirus/_
-                    `
-            );
-          });
-        }
         // Delay 3 Sec
       }, i * 3000);
     }
