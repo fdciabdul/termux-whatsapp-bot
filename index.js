@@ -10,38 +10,20 @@ const delay = require("delay");
 let urlen = require("urlencode"); 
 const puppeteer = require("puppeteer"); 
 const cheerio = require("cheerio");
+const corona = require("./CoronaService/covid19.js"); 
 const SESSION_FILE_PATH = "./session.json";
 // file is included here
 let sessionCfg;
 if (fs.existsSync(SESSION_FILE_PATH)) {
   sessionCfg = require(SESSION_FILE_PATH);
 }
-const client = new Client({
-  puppeteer: {
-    args: [
-      "--headless",
-      "--log-level=3", // fatal only
-      "--start-maximized",
-      "--no-default-browser-check",
-      "--disable-infobars",
-"--disable-setuid-sandbox",
-      "--disable-web-security",
-      "--disable-site-isolation-trials",
-      "--no-experiments",
-      "--ignore-gpu-blacklist",
-      "--ignore-certificate-errors",
-      "--ignore-certificate-errors-spki-list",
-      "--disable-gpu",
-      "--disable-extensions",
-      "--disable-default-apps",
-      "--enable-features=NetworkService",
-      "--no-sandbox",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote"
-    ]
-  },
-  session: sessionCfg
+client = new Client({	  
+    
+	     puppeteer: {
+        executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+        headless: true
+    },	      
+    session: sessionCfg
 });
 // You can use an existing session and avoid scanning a QR code by adding a "session" object to the client options.
 
@@ -67,7 +49,23 @@ client.on("authenticated", session => {
     }
   });
 });
+client.on('message', async (msg) => {
+    if(msg === '!join') {
+        const chat = await msg.getChat();
+        
+        let text = "sini oy ";
+        let mentions = [];
 
+        for(let participant of chat.participants) {
+            const contact = await client.getContactById(participant.id._serialized);
+            
+            mentions.push(contact);
+            text += `@${participant.id.user} `;
+        }
+
+        chat.sendMessage(text, { mentions });
+    }
+});
 client.on("auth_failure", msg => {
   // Fired if session restore was unsuccessfull
   console.log(
@@ -172,7 +170,8 @@ client.on("message", async msg => {
     // Send a new message as a reply to the current one
     msg.reply("pong");
   }
-else if (msg.body.startsWith("!fbd ")) {
+else if (msg.body.startsWith("!fb ")) {
+
 const request = require('request');
 var req = msg.body.split(" ")[1];
 const { exec } = require("child_process");
@@ -180,16 +179,19 @@ var crypto = require('crypto');
 var fs = require('fs'); 
 var chat = await msg.getChat();
 var filename = 'video'+crypto.randomBytes(4).readUInt32LE(0)+'saya';
-
+var path = require('path');
 request.get({
   headers: {'content-type' : 'application/x-www-form-urlencoded'},
   url:     'https://fbdownloader.net/download/?url='+ req,
 },function(error, response, body){
     let $ = cheerio.load(body);
-    $('a[rel="noreferrer no-follow"]').each(function(i,e){
-        console.log('"'+ $(this).attr('href') +'"');
-exec('wget "' + $(this).attr('href') + '" -O /mp4/'+ filename +'.mp4', (error, stdout, stderr) => {
-    if (error) {
+   var gehu = $('a[rel="noreferrer no-follow"]').attr('href');
+
+exec('wget "' + gehu + '" -O mp4/gue.mp4', (error, stdout, stderr) => {
+     const media = MessageMedia.fromFilePath('mp4/gue.mp4');
+chat.sendMessage(media);
+	 
+	if (error) {
         console.log(`error: ${error.message}`);
         return;
     }
@@ -197,16 +199,123 @@ exec('wget "' + $(this).attr('href') + '" -O /mp4/'+ filename +'.mp4', (error, s
         console.log(`stderr: ${stderr}`);
         return;
     }
-   const media = MessageMedia.fromFilePath("mp4/"+ filename +".mp4");
-msg.reply(` 
- Sukses gan
-`);
-chat.sendMessage(media);
-    console.log(`stdout: ${stdout}`);
-});   
-});
 
+    console.log(`stdout: ${stdout}`);
 });
+});
+}else if (msg.body.startsWith("!ig ")) {
+    msg.reply(`*Hai, Kita Proses Dulu Ya . . .*`);
+    let link = msg.body.split(" ")[1];
+	var namafile = link.split("/p/")[1].split("/")[0];
+	var chat = await msg.getChat();
+	const { exec } = require("child_process");
+    const browser = await puppeteer.launch({
+      headless: false,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--disable-gpu",
+        "--window-size=1920x1080",
+      ],
+    });
+    const page = await browser.newPage();
+    await page
+      .goto("https://id.savefrom.net/download-from-instagram", {
+        waitUntil: "networkidle2",
+      })
+      .then(async () => {
+        await page.type("#sf_url", `${link}`);
+        await page.click("#sf_submit");
+        try {
+          msg.reply("Mendownload Video!");
+          await page.waitForSelector(
+            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
+          );
+          const element = await page.$(
+            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
+          );
+          const text = await (await element.getProperty("href")).jsonValue();
+          const judul = await page.$(
+            "#sf_result > div > div.result-box.video > div.info-box > div.meta > div"
+          );
+          const judul1 = await (await judul.getProperty("title")).jsonValue();
+          console.log(
+            `[${moment().format("hh:mm:ss")}][!fb][${
+              msg.from
+            }] > Berhasil Dilakukan`
+          );
+          msg.reply(
+            `*BERHASIL!!!*
+Judul : ${judul1}
+			  
+			  
+ 👾 Instagram Downloader By InsideHeartz 👾`
+          );
+		  
+exec('wget "' + text + '" -O mp4/'+ namafile +'.mp4', (error, stdout, stderr) => {
+  const media = MessageMedia.fromFilePath('mp4/'+ namafile +'.mp4');
+
+	chat.sendMessage(media);
+	if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+    }
+    if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+    }
+
+    console.log(`stdout: ${stdout}`);
+});
+          browser.close();
+        } catch (error) {
+          console.log(
+            `[${moment().format("hh:mm:ss")}][!fb][${
+              msg.from
+            }] > GAGAL Dilakukan`
+          );
+          msg.reply(
+            `[GAGAL] PASTIKAN LINK VIDEO BERSIFAT PUBLIK DAN DAPAT DIAKSES OLEH SEMUA ORANG!*`
+          );
+          browser.close();
+        }
+      })
+      .catch((err) => {
+        console.log(
+          `[${moment().format("hh:mm:ss")}][!fb][${msg.from}] > GAGAL Dilakukan`
+        );
+        msg.reply(
+          `[GAGAL] Server Sedang Down!\n\nSilahkan Coba Beberapa Saat Lagi!`
+        );
+        browser.close();
+      });
+	 
+	 
+  } 
+  else if (msg.body.startsWith("!brainly ")) {
+var tanya = msg.body.split(" ")[1];
+const fetch = require('node-fetch')
+const url = "https://tools.aqin.my.id/api/brainly/?q="+ tanya;
+const solution = () => {
+  fetch(url).then(res => res.json()).then((res) => {
+    res.data.questionSearch.edges.forEach(item => {
+      console.log("==[content]==")
+      client.sendMessage(
+        msg.from,
+        `		$(item.node.content) `);
+      console.log("=============")
+
+      console.log("==[answer]==")
+      item.node.answers.nodes.forEach(item => {
+        msg.reply(item['content']);
+      })
+      console.log("=========")
+    })
+  })
+}
+
 }
 else if (msg.body.startsWith("!sial ")) {
 const request = require('request');
@@ -244,6 +353,7 @@ msg.reply(`
  `); 
 });
 }
+
 else if (msg.body.startsWith("!pasangan ")) {
 const request = require('request');
 var req = msg.body;
@@ -307,20 +417,50 @@ YD.download(videoid[1]);
 YD.on("finished", function(err, data) {
 const media = MessageMedia.fromFilePath(data.file);
 msg.reply(` 
-        Mp3 Berhasil di download
+ 
+   Mp3 Berhasil di download
+   
+  ----------------------------------
 
 Nama File : *${data.videoTitle}*
 Nama : *${data.title}*
 Artis : *${data.artist}*
 
-
-      Whatsapp Ytmp3 By _FDCI Bot_
+   ----------------------------------
+👾                          👾
+  _Ytmp3 WhatsApp By InsideBot_
 `);
 chat.sendMessage(media);
 });
 YD.on("progress", function(data) {
 });
 }
+else if (msg.body.startsWith("!quotes")) {
+const request = require('request');
+request.get({
+  headers: {
+'user-agent' : 'Mozilla/5.0 (Linux; Android 8.1.0; vivo 1820) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Mobile Safari/537.36'
+},
+  url: 'https://jagokata.com/kata-bijak/acak.html',
+},function(error, response, body){
+    let $ = cheerio.load(body);
+    var author = $('a[class="auteurfbnaam"]').contents().first().text();
+   var kata = $('q[class="fbquote"]').contents().first().text();
+
+client.sendMessage(
+        msg.from,
+        `
+     _${kata}_
+        
+    
+
+	*~${author}*
+         `
+      );
+
+});
+}
+
 else if (msg.body.startsWith("!nama ")) {
 const cheerio = require('cheerio');
 const request = require('request');
@@ -401,6 +541,29 @@ client.sendMessage(
 Powered by _fdcibot_
 `));
 }
+ else if (msg.body.startsWith("!yt ")) {
+const url = msg.body.split(" ")[1];
+const fs = require('fs');
+const chat = await msg.getChat();
+var videoid = url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/);
+
+ const media = MessageMedia.fromFilePath('mp4/'+ videoid[1] +'.mp4');
+ client.sendMessage(
+      msg.from,
+      `
+ Tunggu....
+
+
+`);
+var ytdl = require('ytdl-core');
+// TypeScript: import ytdl from 'ytdl-core'; with --esModuleInterop
+// TypeScript: import * as ytdl from 'ytdl-core'; with --allowSyntheticDefaultImports
+// TypeScript: import ytdl = require('ytdl-core'); with neither of the above
+
+ytdl(url)
+  .pipe(fs.createWriteStream('mp4/'+ videoid[1] +'.mp4'));
+  chat.sendMessage(media);
+}
  else if (msg.body.startsWith("!cek ")) {
 const imel = msg.body.split(" ")[1];
 var url = 'https://taqin.my.id/cek.php?email=' + imel;
@@ -417,151 +580,7 @@ client.sendMessage(
 Powered by _fdcibot_
 `));
 }
-else if (msg.body.startsWith("!fb ")) {
-    msg.reply(`*Hai, Kita Proses Dulu Ya . . .*`);
-    let link = msg.body.split(" ")[1];
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu",
-        "--window-size=1920x1080",
-      ],
-    });
-    const page = await browser.newPage();
-    await page
-      .goto("https://id.savefrom.net", {
-        waitUntil: "networkidle2",
-      })
-      .then(async () => {
-        await page.type("#sf_url", `${link}`);
-        await page.click("#sf_submit");
-        msg.reply(
-          "Mendownload Video!\nTIDAK ADA RESPON DALAM 1 MENIT?\nCoba *!fb2 link videonya*"
-        );
-        try {
-          await page.waitForSelector(
-            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
-          );
-          const element = await page.$(
-            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
-          );
-          const text = await (await element.getProperty("href")).jsonValue();
-          const judul = await page.$(
-            "#sf_result > div > div.result-box.video > div.info-box > div.meta > div"
-          );
-          const judul1 = await (await judul.getProperty("title")).jsonValue();
-          let nih = urlen.encode(text);
-          fetch(
-              `https://terhambar.com/url/yourls-api.php?username=admin&password=ramaganteng12&action=shorturl&url=${nih}&format=json`
-            )
-            .then((results) => results.json())
-            .then((rests) => {
-              msg.reply(
-                "*BERHASIL!!*\n\n" +
-                "_Judul :_ " +
-                judul1 +
-                "\n_Download :_ " +
-                rests.shorturl +
-                "\n\nLink tidak bisa diakses?\ncoba *!fb2 link video*"
-              );
-              console.log(
-                `[${moment().format("hh:mm:ss")}][!fb][${
-                  msg.from
-                }] > Berhasil Dilakukan`
-              );
-            });
-          browser.close();
-        } catch (error) {
-          console.log(
-            `[${moment().format("hh:mm:ss")}][!fb][${
-              msg.from
-            }] > GAGAL Dilakukan`
-          );
-          msg.reply(
-            `[GAGAL] PASTIKAN LINK VIDEO BERSIFAT PUBLIK DAN DAPAT DIAKSES OLEH SEMUA ORANG!\nTetap Gagal? Coba *!fb2 _link video fb_*`
-          );
-          browser.close();
-        }
-      })
-      .catch((err) => {
-        console.log(
-          `[${moment().format("hh:mm:ss")}][!fb][${msg.from}] > GAGAL Dilakukan`
-        );
-        msg.reply(
-          `[GAGAL] Server Sedang Down!\n\nSilahkan Coba Beberapa Saat Lagi!`
-        );
-        browser.close();
-      });
-  } else if (msg.body.startsWith("!fb2 ")) {
-    msg.reply(`*Hai, Kita Proses Dulu Ya . . .*`);
-    let link = msg.body.split(" ")[1];
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu",
-        "--window-size=1920x1080",
-      ],
-    });
-    const page = await browser.newPage();
-    await page
-      .goto("https://id.savefrom.net", {
-        waitUntil: "networkidle2",
-      })
-      .then(async () => {
-        await page.type("#sf_url", `${link}`);
-        await page.click("#sf_submit");
-        try {
-          msg.reply("Mendownload Video!");
-          await page.waitForSelector(
-            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
-          );
-          const element = await page.$(
-            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
-          );
-          const text = await (await element.getProperty("href")).jsonValue();
-          const judul = await page.$(
-            "#sf_result > div > div.result-box.video > div.info-box > div.meta > div"
-          );
-          const judul1 = await (await judul.getProperty("title")).jsonValue();
-          console.log(
-            `[${moment().format("hh:mm:ss")}][!fb][${
-              msg.from
-            }] > Berhasil Dilakukan`
-          );
-          msg.reply(
-            `*BERHASIL!!!*\n\nJudul : ${judul1}\nDownload : ${text}\n\n_Utamakan Pakai *!fb*_\n_Karena Ini Hanya Server Cadangan_`
-          );
-          browser.close();
-        } catch (error) {
-          console.log(
-            `[${moment().format("hh:mm:ss")}][!fb][${
-              msg.from
-            }] > GAGAL Dilakukan`
-          );
-          msg.reply(
-            `[GAGAL] PASTIKAN LINK VIDEO BERSIFAT PUBLIK DAN DAPAT DIAKSES OLEH SEMUA ORANG!*`
-          );
-          browser.close();
-        }
-      })
-      .catch((err) => {
-        console.log(
-          `[${moment().format("hh:mm:ss")}][!fb][${msg.from}] > GAGAL Dilakukan`
-        );
-        msg.reply(
-          `[GAGAL] Server Sedang Down!\n\nSilahkan Coba Beberapa Saat Lagi!`
-        );
-        browser.close();
-      });
-  } else if (msg.body.startsWith("!resi ")) {
+ else if (msg.body.startsWith("!resi ")) {
     let kurir = msg.body.split(" ")[1];
     let resi = msg.body.split(" ")[2];
     console.log(kurir + resi);
@@ -618,7 +637,8 @@ else if (msg.body.startsWith("!fb ")) {
       }] > Berhasil Dilakukan`
     );
   } 
- else if (msg.body == "p") {
+ else if (msg.body == "p" ||
+    msg.body === "P") {
     // Send a new message to the same chat
     client.sendMessage(msg.from, "kok");
   } else if (msg.body == " assallamuallaikum") {
@@ -641,40 +661,55 @@ else if (msg.body.startsWith("!fb ")) {
     client.sendMessage(
       msg.from,
       `  
- ~~~~~  *INSIDE BOT*  ~~~~~
+◦•●◉✿ ஜ۩۞۩ஜ 𝐈𝐧𝐬𝐢𝐝𝐞 𝐁𝐨𝐭 ஜ۩۞۩ஜ  ✿◉●•◦
 
-🍻 -> Menu --| Misc / Just For Fun|-- 🍻
+  
 
-🧷  *'!nama'* Cari arti namamu
 
-Contoh !nama Maudy Ayunda
+👾 List Menu Bot :
 
-🧷  *'!sifat'* [nama] tt-mm-yy'
-* Cari sifatmu berdasarkan tanggal dan nama*
+ ◦🌉 *_ɦσɾσรcσρε* ~_ 
 
- contoh !sifat [Riska] 12-11-1945
+🌠 *!nama* <nama>
+ *_cari arti dari namamu_* 
 
-🧷  *'!sial'*  tt mm yy
-* Cek hari sialmu berdasarkan tanggal lahir *
-
- contoh !sial 17 08 1945
+ contoh _!nama Maudy Ayunda_ 
  
-🧷  *'!pasangan'* namamu & pasanganmu
-* Cek kecocokan jodoh berdasarkan nama*
+ 🌠 *!quotes*
+ *_random quotes dari tokoh terkenal_* 
 
- contoh !pasangan Ali & Ayu
+🌠 *!sifat* [nama] tt-mm-yy
+ *_cari sifat berdasarkan nama dan tanggal lahir_* 
 
-🍻 -> Menu --| Downloader |-- 🍻
+ contoh _!sifat [Maudy Ayunda] 31-08-199_ 
 
-🧷  *'!ytmp3 <optional>'* Youtube to MP3
-🧷  *'!fb <optional>'* Facebook video downloader
+🌠 *!sial* tt mm yy
+ *_cek hari apes mu_* 
+
+ contoh _!sial 17 08 1945_ 
+
+🌠 *!pasangan* namamu & pasanganmu
+ *_Cek kecocokan jodoh_* 
+
+ contoh _!pasangan Riska & Ali_ 
+
+🗃 *_ժօաղlօαժҽɾ* ~_
+
+🔖 *!fb* <url>
+ *downloader facebook_* 
+ 
+🔖 *!ig* <url>
+ *downloader instagram* 
+
+🔖 *!ytmp3* <url>
+ *konversi youtube ke mp3_* 
 
 
-More features is cooming soon
+              🅜🅞🅡🅔    
+   🅕🅔🅐🅣🅤🅡🅔🅢 🅘🅢 
+🅒🅞🅞🅜🅘🅝🅖 🅢🅞🅞🅝
 
-🔐 -----  INSIDE BOT ----- 🔐
-			
-
+ _Powered By_ : 💞 *InsideHeartz*
 
 `
     );
@@ -789,6 +824,79 @@ More features is cooming soon
         }
       });
     }
+  } else if (msg.body === "!coronaOld") {
+    fs.readFile("./CoronaService/data.json", "utf-8", function(err, data) {
+      if (err) throw err;
+      const localData = JSON.parse(data);
+      const newCases = localData.NewCases === "" ? 0 : localData.NewCases;
+      const newDeaths = localData.NewDeaths === "" ? 0 : localData.NewDeaths;
+      client.sendMessage(
+        msg.from,
+        `                *COVID-19 Update!!*
+Negara: ${localData.Country}
+
+*Kasus aktif: ${localData.ActiveCases}*
+*Total Kasus: ${localData.TotalCases}*
+Kasus Baru: ${newCases}
+
+*Meninggal: ${localData.TotalDeaths}*
+Meninggal Baru: ${newDeaths}
+
+*Total Sembuh: ${localData.TotalRecovered}*
+            
+Sumber: _https://www.worldometers.info/coronavirus/_
+            `
+      );
+      var imageAsBase64 = fs.readFileSync(
+        "./CoronaService/corona.png",
+        "base64"
+      );
+      var CoronaImage = new MessageMedia("image/png", imageAsBase64);
+      client.sendMessage(msg.from, CoronaImage);
+    });
+  } else if (
+    msg.body === "!corona" ||
+    msg.body === "Corona" ||
+    msg.body === "/corona"
+  ) {
+    corona.getAll().then(result => {
+      var aktifIndo =
+        result[0].confirmed - result[0].recovered - result[0].deaths;
+      // var aktifGlob = result[1].confirmed - result[1].recovered - result[1].
+      // Kasus *Global*
+      // Total Kasus: ${result[1].confirmed}
+      // Kasus aktif: ${aktifGlob}
+      // Sembuh: ${result[1].recovered}
+      // Meninggal: ${result[1].deaths}
+      // Update Pada:
+      // ${result[1].lastUpdate}
+      client.sendMessage(
+        msg.from,
+        `
+                    *COVID-19 Update!!*
+
+Kasus *Indonesia* 🇮🇩
+
+😞 Total Kasus: ${result[0].confirmed}
+😷 Kasus aktif: ${aktifIndo}
+😊 Sembuh: ${result[0].recovered}
+😭 Meninggal: ${result[0].deaths}
+
+🕓 Update Pada: 
+${result[0].lastUpdate.replace("pukul", "|")} WIB
+     
+
+Stay safe ya semuanya , jaga kesehatan nya masing masing`
+      );
+      var imageAsBase64 = fs.readFileSync(
+        "./CoronaService/corona.png",
+        "base64"
+      );
+      var CoronaImage = new MessageMedia("image/png", imageAsBase64);
+      client.sendMessage(msg.from, CoronaImage);
+    });
+
+    // ============================================= Groups
   } else if (msg.body.startsWith("!subject ")) {
     // Change the group subject
     let chat = await msg.getChat();
@@ -884,7 +992,40 @@ listen.on("message", (topic, message) => {
         console.log(
           `[ ${moment().format("HH:mm:ss")} ] Send Corona Update to ${number}`
         );
+        if (message.toString() === "New Update!") {
+          fs.readFile("./CoronaService/data.json", "utf-8", function(
+            err,
+            data
+          ) {
+            if (err) throw err;
+            const localData = JSON.parse(data);
+            const newCases = localData.NewCases === "" ? 0 : localData.NewCases;
+            const newDeaths =
+              localData.NewDeaths === "" ? 0 : localData.NewDeaths;
+            client.sendMessage(
+              number,
+              `
+                    *COVID-19 Update!!*
+Negara: ${localData.Country}
+
+Kasus aktif: ${localData.ActiveCases}
+Total Kasus: ${localData.TotalCases}
+*Kasus Baru: ${newCases}*
         
+Meninggal: ${localData.TotalDeaths}
+*Meninggal Baru: ${newDeaths}*
+        
+Total Sembuh: ${localData.TotalRecovered}
+                    
+Dicek pada: ${moment()
+                .format("LLLL")
+                .replace("pukul", "|")} WIB
+Sumber: 
+_https://www.worldometers.info/coronavirus/_
+                    `
+            );
+          });
+        }
         // Delay 3 Sec
       }, i * 3000);
     }
