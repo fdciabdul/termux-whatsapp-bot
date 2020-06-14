@@ -20,7 +20,7 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 client = new Client({	  
     
 	     puppeteer: {
-        executablePath: 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+        executablePath: '/usr/bin/chromium-browser',
         headless: true
     },	      
     session: sessionCfg
