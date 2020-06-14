@@ -1,5 +1,5 @@
 ## Whatsapp Bot With Some Unique Features but it can running with termux tho 😊
-![Twitter](https://img.shields.io/twitter/follow/abdulmuttaqin19?style=social)
+![Twitter](https://img.shields.io/twitter/follow/fdcibdul?style=social)
 ![Commit](https://img.shields.io/github/commit-activity/y/fdciabdul/termux-whatsapp-bot?style=flat-square)
 ![Twitter](https://img.shields.io/github/forks/fdciabdul/termux-whatsapp-bot?style=social)
 
