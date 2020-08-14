@@ -424,7 +424,7 @@ var YoutubeMp3Downloader = require("youtube-mp3-downloader");
 
 //Configure YoutubeMp3Downloader with your settings
 var YD = new YoutubeMp3Downloader({
-    "ffmpegPath": "ffmpeg", 
+    "ffmpegPath": "/usr/bin/ffmpeg", 
     "outputPath": "./mp3",    // Where should the downloaded and en>
     "youtubeVideoQuality": "highest",       // What video quality sho>
     "queueParallelism": 2,                  // How many parallel down>
