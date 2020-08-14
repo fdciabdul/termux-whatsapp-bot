@@ -5,7 +5,6 @@ const { Client, MessageMedia } = require("whatsapp-web.js");
 const mqtt = require("mqtt"); 
 const listen = mqtt.connect("mqtt://test.mosquitto.org"); 
 const fetch = require("node-fetch"); 
-const User = require("./user.js"); 
 const delay = require("delay"); 
 let urlen = require("urlencode"); 
 const puppeteer = require("puppeteer"); 
@@ -19,8 +18,30 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 client = new Client({	  
     
 	     puppeteer: {
-        executablePath: '/usr/bin/chromium-browser',
-        headless: true
+        executablePath: '/usr/bin/chromium',
+        headless: true,
+		args: [
+      "--log-level=3", // fatal only
+   
+      "--no-default-browser-check",
+      "--disable-infobars",
+      "--disable-web-security",
+      "--disable-site-isolation-trials",
+      "--no-experiments",
+      "--ignore-gpu-blacklist",
+      "--ignore-certificate-errors",
+      "--ignore-certificate-errors-spki-list",
+    
+      "--disable-extensions",
+      "--disable-default-apps",
+      "--enable-features=NetworkService",
+      "--disable-setuid-sandbox",
+      "--no-sandbox",
+    
+      "--no-first-run",
+      "--no-zygote"
+    ]
+		
     },	      
     session: sessionCfg
 });
