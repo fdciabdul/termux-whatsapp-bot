@@ -18,7 +18,6 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 client = new Client({	  
     
 	     puppeteer: {
-        executablePath: '/usr/bin/chromium',
         headless: true,
 		args: [
       "--log-level=3", // fatal only
