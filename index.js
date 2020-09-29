@@ -1,9 +1,8 @@
-const fs = require("fs"); 
+const fs = require("fs");
+const config = require("./path.js"); 
 const moment = require("moment");
 const qrcode = require("qrcode-terminal"); 
 const { Client, MessageMedia } = require("whatsapp-web.js"); 
-const mqtt = require("mqtt"); 
-const listen = mqtt.connect("mqtt://test.mosquitto.org"); 
 const fetch = require("node-fetch"); 
 const delay = require("delay"); 
 let urlen = require("urlencode"); 
@@ -18,7 +17,8 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 client = new Client({	  
     
 	     puppeteer: {
-        headless: true,
+        executablePath: config.chromium_path ,
+      headless: true,
 		args: [
       "--log-level=3", // fatal only
    
@@ -105,13 +105,6 @@ client.on("ready", () => {
 
 // ======================= Begin initialize mqtt broker
 
-listen.on("connect", () => {
-  listen.subscribe("corona", function(err) {
-    if (!err) {
-      console.log(`[ ${moment().format("HH:mm:ss")} ] Mqtt topic subscribed!`);
-    }
-  });
-});
 
 // ======================= WaBot Listen on Event
 
