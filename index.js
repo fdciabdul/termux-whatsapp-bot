@@ -182,27 +182,31 @@ client.on("message", async msg => {
     // Send a new message as a reply to the current one
     msg.reply("pong");
   }
-else if (msg.body.startsWith("!fb ")) {
 
-const request = require('request');
-var req = msg.body.split(" ")[1];
+else if (msg.body.startsWith("!fb ")) {
+var teks = msg.body.split("!fb ")[1];
 const { exec } = require("child_process");
-var crypto = require('crypto');
-var fs = require('fs'); 
-var chat = await msg.getChat();
-var filename = 'video'+crypto.randomBytes(4).readUInt32LE(0)+'saya';
-var path = require('path');
+var url = "http://api.fdci.se/sosmed/fb.php?url="+ teks;
+
 request.get({
-  headers: {'content-type' : 'application/x-www-form-urlencoded'},
-  url:     'https://fbdownloader.net/download/?url='+ req,
+  headers: {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:74.0) Gecko/20100101 Firefox/74.0'},
+  url:     url,
 },function(error, response, body){
     let $ = cheerio.load(body);
-   var gehu = $('a[rel="noreferrer no-follow"]').attr('href');
+  var b = JSON.parse(body);
 
-exec('wget "' + gehu + '" -O mp4/gue.mp4', (error, stdout, stderr) => {
-     const media = MessageMedia.fromFilePath('mp4/gue.mp4');
-chat.sendMessage(media);
-	 
+ var teks = `
+ Berhasil Mendownload 
+ 
+ Judul = ${b.judul}
+ 
+ Facebook Downloader By InsideHeartz (*´∇｀*)
+ `;
+ 
+exec('wget "' + b.link + '" -O mp4/fbvid.mp4', (error, stdout, stderr) => {
+  let media = MessageMedia.fromFilePath('mp4/fbvid.mp4');
+	client.sendMessage(msg.from, media, {
+	caption: teks });
 	if (error) {
         console.log(`error: ${error.message}`);
         return;
@@ -214,8 +218,11 @@ chat.sendMessage(media);
 
     console.log(`stdout: ${stdout}`);
 });
+
 });
-}else if (msg.body.startsWith("!ig ")) {
+}
+
+else if (msg.body.startsWith("!ig ")) {
     msg.reply(`*Hai, Kita Proses Dulu Ya . . .*`);
     let link = msg.body.split(" ")[1];
 	var namafile = link.split("/p/")[1].split("/")[0];
