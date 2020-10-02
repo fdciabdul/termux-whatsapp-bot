@@ -15,7 +15,9 @@ copy paste command below
 ```bash
 > pkg update -y && pkg install curl proot tar -y && curl https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Ubuntu/ubuntu-xfce.sh | bash
 ```
-and if 
+it'll take a long times you know
+
+<img src="https://telegra.ph/file/af3e0d8e36c637b4a5c0d.jpg"/>
 
 ```bash
 > git clone https://github.com/fdciabdul/termux-whatsapp-bot
