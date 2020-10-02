@@ -9,11 +9,15 @@ This is a bot , sure this is a bot !
 
 make sure u have installed ubuntu 18.04 in your termux , if you aren't install it 
 go install an Apps called *Andronix* on google play 
-until you have ubuntu like this
 
+## open termux
 
-then ..
-Clone this project
+copy paste command below
+
+```bash
+> pkg update -y && pkg install curl proot tar -y && curl https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Ubuntu/ubuntu-xfce.sh | bash
+```
+and if 
 
 ```bash
 > git clone https://github.com/fdciabdul/termux-whatsapp-bot
