@@ -19,6 +19,7 @@ it'll take a long times you know
 
 <img src="https://telegra.ph/file/af3e0d8e36c637b4a5c0d.jpg"/>
 
+and please be patient , because if you close termux , the file will be corrupt or crash
 ```bash
 > git clone https://github.com/fdciabdul/termux-whatsapp-bot
 > cd termux-whatsapp-bot
