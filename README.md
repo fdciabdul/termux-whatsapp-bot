@@ -3,7 +3,7 @@
 WhatsApp Bot For Termux
 
 ![Twitter](https://img.shields.io/twitter/follow/fdciabdul?style=social)
-![Commit](https://img.shields.io/github/commit-activity/y/fdciabdul/termux-whatsapp-bot?style=flat-square)
+![Commit](https://img.shields.io/github/fdciabdul/termux-whatsapp-bot?style=flat-square)
 ![Fork](https://img.shields.io/github/forks/fdciabdul/termux-whatsapp-bot?style=social)
 
 
