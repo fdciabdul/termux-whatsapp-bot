@@ -2,9 +2,8 @@
 
 WhatsApp Bot For Termux
 
-![Twitter](https://img.shields.io/twitter/follow/fdciabdul?style=social)
-![Commit](https://img.shields.io/github/fdciabdul/termux-whatsapp-bot?style=flat-square)
-![Fork](https://img.shields.io/github/forks/fdciabdul/termux-whatsapp-bot?style=social)
+![Twitter](https://img.shields.io/twitter/follow/fdciabdul?style=flat-square)
+![Fork](https://img.shields.io/github/forks/fdciabdul/termux-whatsapp-bot?style=flat-square)
 
 
 This is a bot , sure this is a bot ! 
