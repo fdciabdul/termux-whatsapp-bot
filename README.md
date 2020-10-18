@@ -1,6 +1,8 @@
 ## 
 
 WhatsApp Bot For Termux
+<img src="https://telegra.ph/file/50d676d2ce8c15f21dc83.png">
+
 
 ![Twitter](https://img.shields.io/twitter/follow/fdciabdul?style=flat-square)
 ![Fork](https://img.shields.io/github/forks/fdciabdul/termux-whatsapp-bot?style=flat-square)
