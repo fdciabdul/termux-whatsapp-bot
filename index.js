@@ -1,24 +1,33 @@
-const fs = require("fs");
-const config = require("./path.js"); 
+// code by InsideHeartz
+// github.com/fdciabdul
+
+const fs = require("fs"); 
 const moment = require("moment");
 const qrcode = require("qrcode-terminal"); 
 const { Client, MessageMedia } = require("whatsapp-web.js"); 
 const fetch = require("node-fetch"); 
-const delay = require("delay"); 
-let urlen = require("urlencode"); 
 const puppeteer = require("puppeteer"); 
 const cheerio = require("cheerio");
 const SESSION_FILE_PATH = "./session.json";
+const urlencode = require("urlencode");
+const yts = require("./lib/cmd.js");
+const config = require("./path.js");
+const axios = require("axios");
 // file is included here
 let sessionCfg;
+const logo = require('asciiart-logo');
+const banner = require('./package.json');
+console.log(logo(banner).render());
+
+
 if (fs.existsSync(SESSION_FILE_PATH)) {
   sessionCfg = require(SESSION_FILE_PATH);
 }
 client = new Client({	  
     
 	     puppeteer: {
-        executablePath: config.chromium_path ,
-      headless: true,
+        executablePath: config.chrome_path,
+        headless: true,
 		args: [
       "--log-level=3", // fatal only
    
@@ -44,7 +53,6 @@ client = new Client({
     },	      
     session: sessionCfg
 });
-// You can use an existing session and avoid scanning a QR code by adding a "session" object to the client options.
 
 client.initialize();
 
@@ -68,23 +76,7 @@ client.on("authenticated", session => {
     }
   });
 });
-client.on('message', async (msg) => {
-    if(msg === '!join') {
-        const chat = await msg.getChat();
-        
-        let text = "sini oy ";
-        let mentions = [];
 
-        for(let participant of chat.participants) {
-            const contact = await client.getContactById(participant.id._serialized);
-            
-            mentions.push(contact);
-            text += `@${participant.id.user} `;
-        }
-
-        chat.sendMessage(text, { mentions });
-    }
-});
 client.on("auth_failure", msg => {
   // Fired if session restore was unsuccessfull
   console.log(
@@ -143,17 +135,80 @@ client.on("message_ack", (msg, ack) => {
     // The message was read
   }
 });
+client.on('group_join', async (notification) => {
+    // User has joined or been added to the group. 
+    console.log('join', notification);
+    const botno = notification.chatId.split('@')[0];
+    let number = await notification.id.remote;
+    client.sendMessage(number, `Hai perkenalkan aku Inside Bot, selamat datang di group ini`);
+  
+    const chats = await client.getChats();
 
-client.on("group_join", notification => {
-  // User has joined or been added to the group.
-  console.log("join", notification);
-  notification.reply("User joined.");
+// ==== Getting Group Chat === //
+    for (i in chats) {
+        if (number == chats[i].id._serialized) {
+            chat = chats[i];
+        }
+    }
+    var participants = {};
+    var admins = {};
+    var i;
+    for (let participant of chat.participants) {
+        if (participant.id.user == botno) { continue; }
+        //participants.push(participant.id.user);
+        const contact = await client.getContactById(participant.id._serialized);
+        participants[contact.pushname] = participant.id.user;
+        // participant needs to send a message for it to be defined
+        if (participant.isAdmin) {
+            //admins.push(participant.id.user);
+            admins[contact.pushname] = participant.id.user;
+            client.sendMessage(participant.id._serialized, 'Hai admin, ada member baru di group mu');
+            const media = MessageMedia.fromFilePath('./test/test.pdf');
+            client.sendMessage(participant.id._serialized, media);
+        }
+    }
+    console.log('Group Details');
+    console.log('Name: ', chat.name);
+    console.log('Participants: ', participants);
+    console.log('Admins: ', admins);
+    //notification.reply('User joined.'); // sends message to self
 });
 
-client.on("group_leave", notification => {
-  // User has left or been kicked from the group.
-  console.log("leave", notification);
-  notification.reply("User left.");
+client.on('group_leave', async (notification) => {
+    // User has joined or been added to the group. 
+    console.log('leave', notification);
+    const botno = notification.chatId.split('@')[0];
+    let number = await notification.id.remote;
+    client.sendMessage(number, `Selamat tinggal kawan`);
+  
+    const chats = await client.getChats();
+    for (i in chats) {
+        if (number == chats[i].id._serialized) {
+            chat = chats[i];
+        }
+    }
+    var participants = {};
+    var admins = {};
+    var i;
+    for (let participant of chat.participants) {
+        if (participant.id.user == botno) { continue; }
+        //participants.push(participant.id.user);
+        const contact = await client.getContactById(participant.id._serialized);
+        participants[contact.pushname] = participant.id.user;
+        // participant needs to send a message for it to be defined
+        if (participant.isAdmin) {
+            //admins.push(participant.id.user);
+            admins[contact.pushname] = participant.id.user;
+            client.sendMessage(participant.id._serialized, 'Hai admin, ada member yang keluar di group mu');
+            const media = MessageMedia.fromFilePath('./test/test.pdf');
+            client.sendMessage(participant.id._serialized, media);
+        }
+    }
+    console.log('Group Details');
+    console.log('Name: ', chat.name);
+    console.log('Participants: ', participants);
+    console.log('Admins: ', admins);
+    //notification.reply('User joined.'); // sends message to self
 });
 
 client.on("group_update", notification => {
@@ -168,32 +223,366 @@ client.on("disconnected", reason => {
 // ======================= WaBot Listen on message
 
 client.on("message", async msg => {
-  console.log(
-    `[ ${moment().format("HH:mm:ss")} ] Message:`,
-    msg.from.replace("@c.us", ""),
-    `| ${msg.type}`,
-    msg.body ? `| ${msg.body}` : ""
-  );
+	// console.log('MESSAGE RECEIVED', msg);
+    const chat = await msg.getChat();
+    const users = await msg.getContact()
+    const dariGC = msg['author']
+    const dariPC = msg['from']
+	console.log(`[ ${moment().format("HH:mm:ss")} ]  => New Message : ${msg.body}
+	`)
+const botTol = () => {
+        msg.reply('[!] Maaf, fitur ini hanya untuk admin(owner).')
+        return
+    }
+    const botTol2 = () => {
+        msg.reply(`[!] Maaf, fitur ini hanya untuk 'Group Chat'.`)
+        return
+    }
+
+    if (msg.body.startsWith('!subject ')) {
+        if (chat.isGroup) {
+            if (dariGC.replace('@c.us', '') == chat.owner.user) {
+                let title = msg.body.slice(9)
+                chat.setSubject(title)
+            } else {
+                botTol()
+            }
+        } else {
+            botTol2()
+        }
+    } else if (msg.body === '!getmember') {
+        const chat = await msg.getChat();
+
+        let text = "";
+        let mentions = [];
+
+        for(let participant of chat.participants) {
+            const contact = await client.getContactById(participant.id._serialized);
+
+            mentions.push(contact);
+			text += "Hai ";
+            text += `@${participant.id.user} `;
+			text += "\n";
+        }
+
+        chat.sendMessage(text, { mentions });
+    } else if (msg.body.startsWith('!deskripsi ')) {
+        if (chat.isGroup) {
+            if (dariGC.replace('@c.us', '') == chat.owner.user ) {
+                let title = msg.body.split("!deskripsi ")[1]
+                chat.setDescription(title)
+            } else {
+                botTol()
+            }
+        } else {
+            botTol2()
+        }
+    } else if (msg.body.startsWith('!promote ')) {
+        if (chat.isGroup) {
+            if (dariGC.replace('@c.us', '') == chat.owner.user) {
+                const contact = await msg.getContact();
+                const title = msg.mentionedIds[0]
+                chat.promoteParticipants([`${title}`])
+                chat.sendMessage(`[:] @${title.replace('@c.us', '')} sekarang anda adalah admin sob 🔥`)
+            } else {
+                botTol()
+            }
+        } else {
+            botTol2()
+        }
+    } else if (msg.body.startsWith('!demote ')) {
+        if (chat.isGroup) {
+            if (dariGC.replace('@c.us', '') == chat.owner.user) {
+                let title = msg.mentionedIds[0]
+                chat.demoteParticipants([`${title}`])
+            } else {
+                botTol()
+            }
+        } else {
+            botTol2()
+        }
+    } else if (msg.body.startsWith('!add ')) {
+        if (chat.isGroup) {
+            if (dariGC.replace('@c.us', '')) {
+                let title = msg.body.slice(5)
+                if (title.indexOf('62') == -1) {
+                    chat.addParticipants([`${title.replace('0', '62')}@c.us`])
+                    msg.reply(`[:] Selamat datang @${title}! jangan lupa baca Deskripsi group yah 😎👊🏻`)
+                } else {
+                    msg.reply('[:] Format nomor harus 0821xxxxxx')
+                }
+            } else {
+                botTol()
+            }
+        } else {
+            botTol2()
+        }
+    } else if (msg.body.startsWith('!kick ')) {
+        if (chat.isGroup) {
+            if (dariGC.replace('@c.us', '') == chat.owner.user) {
+                let title = msg.mentionedIds
+                chat.removeParticipants([...title])
+                // console.log([...title]);
+            } else {
+                botTol()
+            }
+        } else {
+            botTol2()
+        }
+    } else if (msg.body == '!owner') {
+        if (chat.isGroup) {
+            msg.reply(JSON.stringify({
+                owner: chat.owner.user
+            }))
+        } else {
+            botTol2()
+        }
+    } 
+
 
   if (msg.type == "ciphertext") {
     // Send a new message as a reply to the current one
-    msg.reply("kirim ! menu atau !help untuk melihat menu.");
-  } else if (msg.body == "!ping reply") {
-    // Send a new message as a reply to the current one
-    msg.reply("pong");
+    msg.reply("Hallo kak , salam dari aku Simsimi , ada yang bisa di bantu ?");
   }
 
-else if (msg.body.startsWith("!fb ")) {
+// ==========  Menu List
+
+else if (msg.body == "!menu") {
+ client.sendMessage(msg.from,  `
+    *SELAMAT DATANG 😎*
+
+
+Join Grup update bot ini , untuk melihat 
+fitur baru serta aktif / tidak nya 
+https://chat.whatsapp.com/CD1DOWJsJXWJvhpY8ud4S5
+
+			  ️*List Menu*
+			
+➡️ !admin = Menu Khusus Admin Grup🏅
+➡️ !menu1 = Fun Menu 🌞
+➡️ !menu2 = Downloader Menu🎞
+➡️ !menu3 = Horoscope Menu 🎇
+➡️ !menu4 = Edukasi Menu 📕 
+
+
+
+
+`);
+}
+
+// ========= Admin Menu 
+
+else if (msg.body == "!admin") {
+ client.sendMessage(msg.from,  `
+ *!subject* = Ganti nama grup.
+ *!kick* = Kick member grup.
+ *!promote* = Promote admin grup.
+ *!demote* = Menurunkan admin group.
+ *!add* = Menambah member group.
+ *!deskripsi* = Ganti deskripsi grup.
+ `);
+ }
+ 
+ //==========  Menu 1
+
+ else if (msg.body == "!menu1") {
+ client.sendMessage(msg.from,  `
+ 
+   *Welcome To Fun Menu*
+   
+*!randomanime* = untuk melihat gambar anime secara random
+
+*!animehd* = untuk melihat gambar anime HD secara random v2
+
+*!quotes* : Melihat quotes dari tokoh terkenal
+
+*!pantun* : Melihat gombalan pantun pakboy
+
+*!fakta* : Melihat fakta unik secara random
+
+*!play nama lagu*
+contoh: *!play whatever it takes*
+
+*tts teks* : mengubah teks menjadi suara
+
+*!wait* : Menampilkan informasi anime dengan mengirim gambar dengan caption !wait
+
+*!ptl1* : Menampilkan gambar gambar cewek cantik 🤩
+
+*!ptl2* : Menampilkan gambar gambar cowok ganteng 😎
+
+*!chord nama lagu* : Menampilkan Chord Gitar
+
+*!lirik nama lagu* : Menampilkan lirik lagu
+contoh: *!lirik lemon tree*
+
+*!searchimage kata kunci* : Cari gambar berdasarkan kata
+contoh ( _*!searchimage kata bijak*_ )
+`);
+ }
+else if (msg.body == "!menu2") {
+ client.sendMessage(msg.from,  `
+ 
+   *Welcome To Downloader Menu*
+   
+ *!yt url* : Mendownload video dari youtube
+contoh : !yt https://youtu.be/K9jR4hSCbG4
+
+*!ytmp3 url* : Mendownload mp3 dari youtube
+contoh : !ytmp3 https://youtu.be/xUVz4nRmxn4
+
+*!fb url* : Mendownload video dari facebook
+contoh : !fb url
+
+*!ig url* : Mendownload media foto/video dari instagram
+contoh : !ig url
+
+*!pin url* : Mendownload video dari pinterest
+contoh : !pin url
+
+`);
+}
+else if (msg.body == "!menu3") {
+	client.sendMessage (msg.from, `
+*!nama* : Melihat arti dari nama kamu
+ contoh : !nama Bondan
+
+*!pasangan* : Check kecocokan jodoh
+ contoh : !pasangan Dimas & Dinda
+`);
+}	
+// Download Feature
+
+else if (msg.body.startsWith("!ytmp3 ")) {
+var url = msg.body.split(" ")[1];
+var videoid = url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/);
+
+const ytdl = require("ytdl-core")
+const { exec } = require("child_process");
+if(videoid != null) {
+   console.log("video id = ",videoid[1]);
+} else {
+    msg.reply("Videonya gavalid gan.");
+}
+ytdl.getInfo(videoid[1]).then(info => {
+if (info.length_seconds > 3000){
+msg.reply("terlalu panjang.. ")
+}else{
+
+console.log(info.length_seconds)
+
+msg.reply(" Tunggu sebentar kak .. Lagi di proses ☺");
+var YoutubeMp3Downloader = require("youtube-mp3-downloader");
+
+//Configure YoutubeMp3Downloader with your settings
+var YD = new YoutubeMp3Downloader({
+    "ffmpegPath": config.ffmpeg_path, 
+    "outputPath": "./mp3",    // Where should the downloaded and en>
+    "youtubeVideoQuality": "highest",       // What video quality sho>
+    "queueParallelism": 100,                  // How many parallel down>
+    "progressTimeout": 40                 // How long should be the>
+});
+
+YD.download(videoid[1]);
+
+
+YD.on("finished", function(err, data) {
+
+
+var musik = MessageMedia.fromFilePath(data.file);
+
+msg.reply(` 
+ 
+   Mp3 Berhasil di download
+   
+  ----------------------------------
+
+Nama File : *${data.videoTitle}*
+Nama : *${data.title}*
+Artis : *${data.artist}*
+
+   ----------------------------------
+👾                          👾
+  _Ytmp3 WhatsApp By InsideBot_
+`);
+chat.sendMessage(musik);
+});
+YD.on("error", function(error) {
+    console.log(error);
+});
+
+}});
+}
+
+// Youtube Play 
+  else if (msg.body.startsWith("!play ")) {
+var ytdl = require("ytdl-core");
+var hh = msg.body.split("!play ")[1];
+var keyword = hh.replace(/ /g, "+");
+function foreach(arr, func){
+  for(var i in arr){
+    func(i, arr[i]);
+  }
+}
+//////////Calling Async Function//////////
+const id= "";
+
+(async () => {
+var id = await yts.searchYoutube(keyword);
+let result ="";
+
+var teks = ` 
+New Request Song 
+
+Title 
+${result} `;
+console.log( "New Request Play Song " +id[0])
+ 
+var YoutubeMp3Downloader = require("youtube-mp3-downloader");
+
+//Configure YoutubeMp3Downloader with your settings
+var YD = new YoutubeMp3Downloader({
+    "ffmpegPath": "ffmpeg", 
+    "outputPath": "./mp3",    // Where should the downloaded and en>
+    "youtubeVideoQuality": "highest",       // What video quality sho>
+    "queueParallelism": 100,                  // How many parallel down>
+    "progressTimeout": 2000                 // How long should be the>
+});
+
+//Download video and save as MP3 file
+YD.download(id[0]);
+
+YD.on("finished", function(err, data) {
+
+
+const musik = MessageMedia.fromFilePath(data.file);
+var ehe = ` 
+ 
+
+ 🎶 Now Playing 🎶
+
+🔉  *${data.videoTitle}* 
+
+Youtube Play Songs By InsideHeartz :)
+`;
+let media = MessageMedia.fromFilePath('./zerotwo.jpg');
+	client.sendMessage(msg.from, media, {
+	caption: ehe });
+	chat.sendMessage(musik);
+});
+YD.on("progress", function(data) {
+});
+})();
+}
+
+// Facebook Downloaderelse if (msg.body.startsWith("!fb ")) {
+	else if (msg.body.startsWith("!fb ")) {
 var teks = msg.body.split("!fb ")[1];
 const { exec } = require("child_process");
 var url = "http://api.fdci.se/sosmed/fb.php?url="+ teks;
-
-request.get({
-  headers: {'User-Agent':'Mozilla/5.0 (X11; Linux x86_64; rv:74.0) Gecko/20100101 Firefox/74.0'},
-  url:     url,
-},function(error, response, body){
-    let $ = cheerio.load(body);
-  var b = JSON.parse(body);
+axios.get(url)
+  .then((result) => {
+var b = JSON.parse(JSON.stringify(result.data));
 
  var teks = `
  Berhasil Mendownload 
@@ -222,61 +611,166 @@ exec('wget "' + b.link + '" -O mp4/fbvid.mp4', (error, stdout, stderr) => {
 });
 }
 
-else if (msg.body.startsWith("!ig ")) {
-    msg.reply(`*Hai, Kita Proses Dulu Ya . . .*`);
-    let link = msg.body.split(" ")[1];
-	var namafile = link.split("/p/")[1].split("/")[0];
-	var chat = await msg.getChat();
-	const { exec } = require("child_process");
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu",
-        "--window-size=1920x1080",
-      ],
-    });
-    const page = await browser.newPage();
-    await page
-      .goto("https://id.savefrom.net/download-from-instagram", {
-        waitUntil: "networkidle2",
-      })
-      .then(async () => {
-        await page.type("#sf_url", `${link}`);
-        await page.click("#sf_submit");
-        try {
-          msg.reply("Mendownload Video!");
-          await page.waitForSelector(
-            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
-          );
-          const element = await page.$(
-            "#sf_result > div > div.result-box.video > div.info-box > div.link-box.single > div.def-btn-box > a"
-          );
-          const text = await (await element.getProperty("href")).jsonValue();
-          const judul = await page.$(
-            "#sf_result > div > div.result-box.video > div.info-box > div.meta > div"
-          );
-          const judul1 = await (await judul.getProperty("title")).jsonValue();
-          console.log(
-            `[${moment().format("hh:mm:ss")}][!fb][${
-              msg.from
-            }] > Berhasil Dilakukan`
-          );
-          msg.reply(
-            `*BERHASIL!!!*
-Judul : ${judul1}
-			  
-			  
- 👾 Instagram Downloader By InsideHeartz 👾`
-          );
-		  
-exec('wget "' + text + '" -O mp4/'+ namafile +'.mp4', (error, stdout, stderr) => {
-  const media = MessageMedia.fromFilePath('mp4/'+ namafile +'.mp4');
+// random fakta unik
+// pajaar - 2020
+else if (msg.body == "!fakta") {
+const fetch = require("node-fetch"); 
+fetch('https://raw.githubusercontent.com/pajaar/grabbed-results/master/pajaar-2020-fakta-unik.txt')
+    .then(res => res.text())
+    .then(body => {
+	let tod = body.split("\n");
+	let pjr = tod[Math.floor(Math.random() * tod.length)];
+	msg.reply(pjr);
+	});
+}
 
-	chat.sendMessage(media);
+// lirik
+else if (msg.body.startsWith("!lirik ")) {
+var request = require("request");
+let judul = msg.body.split(" ")[1];
+var  url = "http://tololbgt.coolpage.biz/lirik.php?judul="+judul;
+axios.get(url)
+  .then((result) => {
+
+msg.reply(result.data.replace(/pjr-enter/g,"\n"));
+});
+}
+
+// random pantun
+// pajaar - 2020
+else if (msg.body == "!pantun") {
+const fetch = require("node-fetch"); 
+fetch('https://raw.githubusercontent.com/pajaar/grabbed-results/master/pajaar-2020-pantun-pakboy.txt')
+    .then(res => res.text())
+    .then(body => {
+	let tod = body.split("\n");
+	let pjr = tod[Math.floor(Math.random() * tod.length)];
+	msg.reply(pjr.replace(/pjrx-line/g,"\n"));
+	});
+}
+
+// random anime HD v2
+// pajaar 2020
+else if (msg.body == "!animehd" ){
+const fetch = require("node-fetch"); 
+const imageToBase64 = require('image-to-base64');
+fetch('https://raw.githubusercontent.com/pajaar/grabbed-results/master/pajaar-2020-gambar-anime.txt')
+    .then(res => res.text())
+    .then(body => {
+	let tod = body.split("\n");
+	let pjr = tod[Math.floor(Math.random() * tod.length)];
+imageToBase64(pjr) // Image URL
+    .then(
+        (response) => {
+const media = new MessageMedia('image/jpeg', response);
+client.sendMessage(msg.from, media, {
+caption: `Hey...` });
+        }
+    )
+    .catch(
+        (error) => {
+            console.log(error); // Logs an error if there was one
+        }
+    )
+});
+}
+
+// Download Youtube Video
+else if (msg.body.startsWith("!yt ")) {
+const url = msg.body.split(" ")[1];
+const exec = require('child_process').exec;
+
+var videoid = url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/);
+
+const ytdl = require("ytdl-core")
+if(videoid != null) {
+   console.log("video id = ",videoid[1]);
+} else {
+    msg.reply("Videonya gavalid gan.");
+}
+msg.reply(" Tunggu sebentar kak .. Lagi di proses ☺");
+ytdl.getInfo(videoid[1]).then(info => {
+if (info.length_seconds > 1000){
+msg.reply("terlalu panjang.. \n sebagai gantinya \n kamu bisa klik link dibawah ini \π \n "+ info.formats[0].url)
+}else{
+
+console.log(info.length_seconds)
+
+function os_func() {
+    this.execCommand = function (cmd) {
+        return new Promise((resolve, reject)=> {
+           exec(cmd, (error, stdout, stderr) => {
+             if (error) {
+                reject(error);
+                return;
+            }
+            resolve(stdout)
+           });
+       })
+   }
+}
+var os = new os_func();
+
+os.execCommand('ytdl ' + url + ' -q highest -o mp4/'+ videoid[1] +'.mp4').then(res=> {
+    var media = MessageMedia.fromFilePath('mp4/'+ videoid[1] +'.mp4');
+chat.sendMessage(media);
+}).catch(err=> {
+    console.log("os >>>", err);
+})
+
+}
+});
+
+}
+  
+   // ========= Download Instagram
+else if (msg.body.startsWith("!ig ")) {
+const imageToBase64 = require('image-to-base64');
+var link = msg.body.split("!ig ")[1];
+var url = "http://api.fdci.se/sosmed/insta.php?url="+ link;
+const { exec } = require("child_process");
+
+function foreach(arr, func){
+  for(var i in arr){
+    func(i, arr[i]);
+  }
+}
+axios.get(url)
+  .then((result) => {
+var b = JSON.parse(JSON.stringify(result.data));
+ console.log(b.data[0].url) 
+  var teks = ` Download Berhasil 
+  
+  Instagram Downloader By InsideHeartz`;
+  if(b.url == false){
+	  msg.reply(" maaf Kak link nya gaada :P ");
+  }else if( b.data[0][0].type == "foto"){
+	  
+foreach(b.data[0], function(i, v){
+imageToBase64(b.data[0][i].url) // Path to the image
+    .then(
+        (response) => {
+            ; // "cGF0aC90by9maWxlLmpwZw=="
+
+const media = new MessageMedia('image/jpeg', response);
+client.sendMessage(msg.from, media, {
+	caption: teks });
+        }
+    )
+    .catch(
+        (error) => {
+            console.log(error); // Logs an error if there was one
+        }
+    )
+})
+    }else if(b.data[0][0].type == "video"){
+		
+foreach(b.data[0], function(i, v){
+    	exec('wget "' + b.data[0][i].url + '" -O mp4/insta.mp4', (error, stdout, stderr) => {
+
+let media = MessageMedia.fromFilePath('mp4/insta.mp4');
+	client.sendMessage(msg.from, media, {
+	caption: teks });
 	if (error) {
         console.log(`error: ${error.message}`);
         return;
@@ -288,181 +782,277 @@ exec('wget "' + text + '" -O mp4/'+ namafile +'.mp4', (error, stdout, stderr) =>
 
     console.log(`stdout: ${stdout}`);
 });
-          browser.close();
-        } catch (error) {
-          console.log(
-            `[${moment().format("hh:mm:ss")}][!fb][${
-              msg.from
-            }] > GAGAL Dilakukan`
-          );
-          msg.reply(
-            `[GAGAL] PASTIKAN LINK VIDEO BERSIFAT PUBLIK DAN DAPAT DIAKSES OLEH SEMUA ORANG!*`
-          );
-          browser.close();
-        }
-      })
-      .catch((err) => {
-        console.log(
-          `[${moment().format("hh:mm:ss")}][!fb][${msg.from}] > GAGAL Dilakukan`
-        );
-        msg.reply(
-          `[GAGAL] Server Sedang Down!\n\nSilahkan Coba Beberapa Saat Lagi!`
-        );
-        browser.close();
-      });
-	 
-	 
-  } 
-  else if (msg.body.startsWith("!brainly ")) {
-var tanya = msg.body.split(" ")[1];
-const fetch = require('node-fetch')
-const url = "https://tools.aqin.my.id/api/brainly/?q="+ tanya;
-const solution = () => {
-  fetch(url).then(res => res.json()).then((res) => {
-    res.data.questionSearch.edges.forEach(item => {
-      console.log("==[content]==")
-      client.sendMessage(
-        msg.from,
-        `		$(item.node.content) `);
-      console.log("=============")
-
-      console.log("==[answer]==")
-      item.node.answers.nodes.forEach(item => {
-        msg.reply(item['content']);
-      })
-      console.log("=========")
-    })
+})
+}
+  
+})
+  .catch((err) => {
+console.log(err);
   })
 }
+  
+  /// Fun Menu
 
-}
-else if (msg.body.startsWith("!sial ")) {
-const request = require('request');
-var req = msg.body;
-var tanggal = req.split(" ")[1];
-var kk = req.split(" ")[2];
-var bulan = kk.replace("0", "");
-var tahun = req.split(" ")[3];
-request.post({
-  headers: {'content-type' : 'application/x-www-form-urlencoded'},
-  url:     'http://www.primbon.com/primbon_hari_naas.php',
-  body: "tgl="+ tanggal +"&bln="+ bulan +"&thn="+ tahun +"&submit=+Submit%21+"
-},function(error, response, body){
-    let $ = cheerio.load(body);
-var y = $.html().split('<b>PRIMBON HARI NAAS</b><br><br>')[1];
-    var t = y.split('.</i><br><br>')[1];
-    var f = y.replace(t ," ");
-    var x = f.replace(/<br\s*[\/]?>/gi, "\n\n");
-    var h  = x.replace(/<[^>]*>?/gm, '');
-    var d = h.replace("&amp;", '&')
-console.log(""+ d);
-msg.reply(` 
+  //=========  Glow text maker 
+  else if (msg.body.startsWith("!glowtext ")) {
+    msg.reply("sebentarr.. kita proses dulu")
+     var h = msg.body.split("!glowtext ")[1];
+ 
+      const { exec } = require("child_process");
+ 
+   (async () => {
+     const browser = await puppeteer.launch({
+       headless: false,
+ 
+     });
+     const page = await browser.newPage();
+     await page
+       .goto("https://en.ephoto360.com/advanced-glow-effects-74.html", {
+         waitUntil: "networkidle2",
+       })
+       .then(async () => {
+       await page.type("#text-0", h);
+     await page.click("#submit");
+     await new Promise(resolve => setTimeout(resolve, 10000));
+         try {
+          
+           await page.waitForSelector(
+             "#link-image"
+           );
+           const element = await page.$(
+          "div.thumbnail > img"
+           );
+           const text = await (await element.getProperty("src")).jsonValue();
+          console.log(text);
+ 
+         exec('wget "' + text + '" -O mp4/glow.jpg', (error, stdout, stderr) => {
+   const media = MessageMedia.fromFilePath('mp4/glow.jpg');
+ 
+   chat.sendMessage(media);
+   if (error) {
+         console.log(`error: ${error.message}`);
+         return;
+     }
+     if (stderr) {
+         console.log(`stderr: ${stderr}`);
+         return;
+     }
+ 
+     console.log(`stdout: ${stdout}`);
+ });
+           browser.close();
+         } catch (error) {
+           console.log(error);
+        
+ 
+         }
+       })
+       .catch((err) => {
+         console.log(error);
+     
+       });
+    
+    
+   })();
+  }
 
------------------------------------
-
- Cek Hari Naas Kamu ~
- 
- 
- ${d}
- 
- 
- ----------------------------------
-  👾 InsideBot 2020👾
- 
- `); 
-});
-}
-
-else if (msg.body.startsWith("!pasangan ")) {
-const request = require('request');
-var req = msg.body;
-var gh = req.split("!pasangan ")[1];
-
-var namamu = gh.split("&")[0];
-var pasangan = gh.split("&")[1];
-request.get({
-  headers: {'content-type' : 'application/x-www-form-urlencoded'},
-  url:     'http://www.primbon.com/kecocokan_nama_pasangan.php?nama1='+ namamu +'&nama2='+ pasangan +'&proses=+Submit%21+',
- 
-},function(error, response, body){
-    let $ = cheerio.load(body);
-var y = $.html().split('<b>KECOCOKAN JODOH BERDASARKAN NAMA PASANGAN</b><br><br>')[1];
-    var t = y.split('.<br><br>')[1];
-    var f = y.replace(t ," ");
-    var x = f.replace(/<br\s*[\/]?>/gi, "\n");
-    var h  = x.replace(/<[^>]*>?/gm, '');
-    var d = h.replace("&amp;", '&')
-console.log(""+ d);
-msg.reply(` 
-
------------------------------------
-
- *Cek Kecocokan Jodoh Berdasarkan Nama ~*
- 
- 
- ${d}
- 
- 
- ----------------------------------
-  👾 InsideBot 2020 👾
- 
- `); 
-});
-}
-else if (msg.body.startsWith("!ytmp3 ")) {
-var url = msg.body.split(" ")[1];
-var videoid = url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/);
-var chat = await msg.getChat();
-if(videoid != null) {
-   console.log("video id = ",videoid[1]);
-} else {
-    msg.reply("Videonya gavalid gan.");
-}
-msg.reply(" Tunggu sebentar kak .. Lagi di proses ☺");
-var YoutubeMp3Downloader = require("youtube-mp3-downloader");
-
-//Configure YoutubeMp3Downloader with your settings
-var YD = new YoutubeMp3Downloader({
-    "ffmpegPath": "/usr/bin/ffmpeg", 
-    "outputPath": "./mp3",    // Where should the downloaded and en>
-    "youtubeVideoQuality": "highest",       // What video quality sho>
-    "queueParallelism": 2,                  // How many parallel down>
-    "progressTimeout": 2000                 // How long should be the>
-});
-
-//Download video and save as MP3 file
-YD.download(videoid[1]);
-
-YD.on("finished", function(err, data) {
-const media = MessageMedia.fromFilePath(data.file);
-msg.reply(` 
- 
-   Mp3 Berhasil di download
+  //============= Text to mp3
+  else if (msg.body.startsWith("!tts")) {
+	
+    var texttomp3 = require("text-to-mp3");
+      var fs = require("fs");
+  
+  var suara = msg.body.split("!tts ")[1];
+  var text = suara;
+  var fn = "tts/suara.mp3";
+  
+  
+  
+  
+  if(process.argv.indexOf("-?")!== -1){
+    
+    return;
+  }
+  
+  
+  if(process.argv.indexOf("-t")!== -1)
+    text=suara;
+  
+  if(process.argv.indexOf("-f")!== -1)
+    fn=suara;
+  
+  text = text.replace(/ +(?= )/g,'');//remove all multiple space
+  
+  if(typeof text ===  "undefined" || text === ""
+    || typeof fn === "undefined" || fn === "") { // just if I have a text I'm gona parse
+    
+  }
+  
+  //HERE WE GO
+  texttomp3.getMp3(text, function(err, data){
+    if(err){
+      console.log(err);
+      return;
+    }
+  
+    if(fn.substring(fn.length-4, fn.length) !== ".mp3"){ // if name is not well formatted, I add the mp3 extention
+      fn+=".mp3";
+    }
+    var file = fs.createWriteStream(fn); // write it down the file
+    file.write(data);
    
-  ----------------------------------
+    console.log("MP3 SAVED!");
+    
+  });
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+    if(text.length > 200){ // check longness of text, because otherways google translate will give me a empty file
+    msg.reply("Text to long, split in text of 200 characters")
+  }else{
+    const media = MessageMedia.fromFilePath(fn);
+  
+    chat.sendMessage(media);
+  
+  }
+  
+  
+  }
 
-Nama File : *${data.videoTitle}*
-Nama : *${data.title}*
-Artis : *${data.artist}*
+  //==========  Penyegar TimeLine
 
-   ----------------------------------
-👾                          👾
-  _Ytmp3 WhatsApp By InsideBot_
-`);
-chat.sendMessage(media);
-});
-YD.on("progress", function(data) {
-});
-}
-else if (msg.body.startsWith("!quotes")) {
+  else if (msg.body == "!ptl2" ){
+    const imageToBase64 = require('image-to-base64');
+    var items = ["ullzang boy", "cowo ganteng", "cogan", "korean boy"];
+    var cewe = items[Math.floor(Math.random() * items.length)];
+    var url = "http://api.fdci.se/rep.php?gambar=" + cewe;
+    
+   axios.get(url)
+  .then((result) => {
+var b = JSON.parse(JSON.stringify(result.data));
+    var cewek =  b[Math.floor(Math.random() * b.length)];
+    imageToBase64(cewek) // Path to the image
+        .then(
+            (response) => {
+ 
+    const media = new MessageMedia('image/jpeg', response);
+    client.sendMessage(msg.from, media, {
+      caption: `
+Hai Manis 😊` });
+            }
+        )
+        .catch(
+            (error) => {
+                console.log(error); // Logs an error if there was one
+            }
+        )
+    
+    });
+    }
+  
+   else if (msg.body == "!ptl1" ){
+    const imageToBase64 = require('image-to-base64');
+    var items = ["ullzang girl", "cewe cantik", "hijab cantik", "korean girl"];
+    var cewe = items[Math.floor(Math.random() * items.length)];
+    var url = "http://api.fdci.se/rep.php?gambar=" + cewe;
+    
+ axios.get(url)
+  .then((result) => {
+    var b = JSON.parse(JSON.stringify(result.data));
+    var cewek =  b[Math.floor(Math.random() * b.length)];
+    imageToBase64(cewek) // Path to the image
+        .then(
+            (response) => {
+ 
+    const media = new MessageMedia('image/jpeg', response);
+    client.sendMessage(msg.from, media, {
+      caption: `
+Hai Kak 😊` });
+            }
+        )
+        .catch(
+            (error) => {
+                console.log(error); // Logs an error if there was one
+            }
+        )
+    
+    });
+    }
+	
+	//=========  Search Image
+	
+else if (msg.body.startsWith("!searchimage ")) {
+
+var nama = msg.body.split("!searchimage ")[1];
+var req = urlencode(nama.replace(/ /g,"+"));
+    const imageToBase64 = require('image-to-base64');
+
+    var url = "http://api.fdci.se/rep.php?gambar=" + req;
+    
+   axios.get(url)
+  .then((result) => {
+var b = JSON.parse(JSON.stringify(result.data));
+     
+    var cewek =  b[Math.floor(Math.random() * b.length)];
+    imageToBase64(cewek) // Path to the image
+        .then(
+            (response) => {
+ 
+    const media = new MessageMedia('image/jpeg', response);
+    client.sendMessage(msg.from, media, {
+      caption: `
+Whoaaaa gambar di temukan 😲`  });
+            }
+        )
+        .catch(
+            (error) => {
+               msg.reply(`Yaahhhh gambar tidak ditemukan 🤧`); // Logs an error if there was one
+            }
+        )
+    
+    });
+    }
+  
+  // ======= Random Anime
+
+  else if (msg.body == "!randomanime" ){
+    const imageToBase64 = require('image-to-base64');
+    var items = ["anime aesthetic", "anime cute", "anime", "kawaii anime"];
+    var cewe = items[Math.floor(Math.random() * items.length)];
+    var url = "http://api.fdci.se/rep.php?gambar=" + cewe;
+    
+  axios.get(url)
+  .then((result) => {
+var b = JSON.parse(JSON.stringify(result.data));
+   
+    var cewek =  b[Math.floor(Math.random() * b.length)];
+    imageToBase64(cewek) // Path to the image
+        .then(
+            (response) => {
+ 
+    const media = new MessageMedia('image/jpeg', response);
+    client.sendMessage(msg.from, media, {
+      caption: `
+Whoaaaa gambar di temukan 😲` });
+            }
+        )
+        .catch(
+            (error) => {
+                console.log(error); // Logs an error if there was one
+            }
+        )
+    
+    });
+    }
+	
+	//=======  Quotes Terkenal
+
+	else if (msg.body == "!quotes") {
 const request = require('request');
-request.get({
-  headers: {
-'user-agent' : 'Mozilla/5.0 (Linux; Android 8.1.0; vivo 1820) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Mobile Safari/537.36'
-},
-  url: 'https://jagokata.com/kata-bijak/acak.html',
-},function(error, response, body){
-    let $ = cheerio.load(body);
+
+var url = 'https://jagokata.com/kata-bijak/acak.html'
+axios.get(url)
+  .then((result) => {
+   let $ = cheerio.load(result.data);
     var author = $('a[class="auteurfbnaam"]').contents().first().text();
    var kata = $('q[class="fbquote"]').contents().first().text();
 
@@ -480,16 +1070,19 @@ client.sendMessage(
 });
 }
 
+
+// Horoscope Menu
+
+//====== Arti Nama
+
 else if (msg.body.startsWith("!nama ")) {
-const cheerio = require('cheerio');
-const request = require('request');
+
 var nama = msg.body.split("!nama ")[1];
-var req = nama.replace(/ /g,"+");
-request.get({
-  headers: {'content-type' : 'application/x-www-form-urlencoded'},
-  url:     'http://www.primbon.com/arti_nama.php?nama1='+ req +'&proses=+Submit%21+',
-},function(error, response, body){
-    let $ = cheerio.load(body);
+var req = urlencode(nama.replace(/ /g,"+"));
+var url = 'http://www.primbon.com/arti_nama.php?nama1='+ req +'&proses=+Submit%21+';
+axios.get(url)
+  .then((result) => {
+    let $ = cheerio.load(result.data);
     var y = $.html().split('arti:')[1];
     var t = y.split('method="get">')[1];
     var f = y.replace(t ," ");
@@ -504,549 +1097,212 @@ msg.reply(
          Nama _*${nama}*_ ${h}
   ----------------------------------
 
-  _InsideBot_
+        *_Arti Nama By InsideHeartz_*
 `
         );
 });
 }
-else if (msg.body.startsWith("!sifat ")) {
-const cheerio = require('cheerio');
-const request = require('request');
-var req = msg.body.split("[")[1].split("]")[0];
-var nama = req.replace(/ /g," ");
-var pesan = msg.body;
-var y = pesan.replace(/ /g,"+ ");
-var tanggal = y.split("]+")[1].split("-")[0];
-var bulan = y.split("-")[1];
-var tahun = y.split("-")[2];
-request.post({
-  headers: {'content-type' : 'application/x-www-form-urlencoded'},
-  url:     'http://www.primbon.com/sifat_karakter_tanggal_lahir.php',
-  body:    "nama="+ req +"&tanggal="+ tanggal +"&bulan="+ bulan +"&tahun="+ tahun +"&submit=+Submit%21+"
-},function(error, response, body){
- let $ = cheerio.load(body);
-    $('title').after('body')
-    var y = $.html().split('<b>Nama :</b>')[1];
-    var t = y.split('</i><br><br>')[1];
+
+//========  Cek Kecocokan Pasangan
+else if (msg.body.startsWith("!pasangan ")) {
+var req = msg.body;
+var gh = req.split("!pasangan ")[1];
+
+var namamu = urlencode(gh.split("&")[0]);
+var pasangan = urlencode(gh.split("&")[1]);
+var url= 'http://www.primbon.com/kecocokan_nama_pasangan.php?nama1='+ namamu +'&nama2='+ pasangan +'&proses=+Submit%21+';
+axios.get(url)
+  .then((result) => {
+
+    let $ = cheerio.load(result.data);
+var y = $.html().split('<b>KECOCOKAN JODOH BERDASARKAN NAMA PASANGAN</b><br><br>')[1];
+    var t = y.split('.<br><br>')[1];
     var f = y.replace(t ," ");
     var x = f.replace(/<br\s*[\/]?>/gi, "\n");
     var h  = x.replace(/<[^>]*>?/gm, '');
-console.log(""+ h);
-            msg.reply(
-            `
-            *Sifat Dari Nama dan Tanggal Lahir*
-         
-  ----------------------------------
-         Nama ${h}
-  ----------------------------------
+    var d = h.replace("&amp;", '&')
 
-  _Primbon WhatsApp By InsideBot_
-`
-        );
+msg.reply(` 
+
+-----------------------------------
+
+ *Cek Kecocokan Jodoh Berdasarkan Nama ~*
+ 
+ 
+ ${d}
+ 
+ 
+ ----------------------------------
+  _Cek Kecocokan Pasangan mu_
+ 
+ `); 
 });
-  }else if (msg.body.startsWith("!quora ")) {
-const imel = msg.body.split(" ")[1];
-var url = 'http://tools.aqin.my.id/api/quora/api.php?q=' + imel;
-const fetch = require("node-fetch");
-fetch(url)
-.then(res => res.text())
-    .then(body =>
-client.sendMessage(
-      msg.from,
-      `
- ${body}
-
-
-Powered by _fdcibot_
-`));
 }
- else if (msg.body.startsWith("!yt ")) {
-const url = msg.body.split(" ")[1];
-const fs = require('fs');
-const chat = await msg.getChat();
-var videoid = url.match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/);
-
- const media = MessageMedia.fromFilePath('mp4/'+ videoid[1] +'.mp4');
- client.sendMessage(
-      msg.from,
-      `
- Tunggu....
-
-
-`);
-var ytdl = require('ytdl-core');
-// TypeScript: import ytdl from 'ytdl-core'; with --esModuleInterop
-// TypeScript: import * as ytdl from 'ytdl-core'; with --allowSyntheticDefaultImports
-// TypeScript: import ytdl = require('ytdl-core'); with neither of the above
-
-ytdl(url)
-  .pipe(fs.createWriteStream('mp4/'+ videoid[1] +'.mp4'));
-  chat.sendMessage(media);
-}
- else if (msg.body.startsWith("!cek ")) {
-const imel = msg.body.split(" ")[1];
-var url = 'https://taqin.my.id/cek.php?email=' + imel;
-const fetch = require("node-fetch");
-fetch(url)
-.then(res => res.text())
-    .then(body =>
-client.sendMessage(
-      msg.from,
-      `
- ${body}
-
-
-Powered by _fdcibot_
-`));
-}
- else if (msg.body.startsWith("!resi ")) {
-    let kurir = msg.body.split(" ")[1];
-    let resi = msg.body.split(" ")[2];
-    console.log(kurir + resi);
-    if (kurir.length != 2 || resi.length != 6) {
-      fetch(`https://api.terhambar.com/resi?resi=${resi}&kurir=${kurir}`)
-        .then((resss) => resss.json())
-        .then((resst) => {
-          if (resst.status != "OK") {
-            msg.reply("*Maaf Server Mencapai Batas Harian! Coba Lagi Besok!*");
-          } else {
-            let ar = [];
-            let sem = "";
-            for (let i = 0; i < Object.keys(resst.lacak.stats).length; i++) {
-              let sendlah =
-                "moment().format('hh:mm:ss') : " +
-                resst.lacak.stats[i].moment().format("hh:mm:ss") +
-                "\nKeterangan : " +
-                resst.lacak.stats[i].keterangan +
-                "\nKota : " +
-                resst.lacak.stats[i].kota +
-                "\n\n";
-              ar.push(sendlah);
-              sem = ar.join("");
-            }
-            console.log(
-              `[${moment().format("hh:mm:ss")}][!fb][${
-                msg.from
-              }] > Berhasil Dilakukan`
-            );
-            msg.reply(
-              "*Berhasil Melacak*\n\n" +
-              "Nama Penerima : " +
-              resst.name +
-              "\nKurir : " +
-              resst.kurir +
-              "\nmoment().format('hh:mm:ss') Input Resi : " +
-              resst.tlg_input +
-              `\n\n*Pelacakan* :\n${sem}`
-            );
-          }
-        });
-    } else {
-      console.log(
-        `[${moment().format("hh:mm:ss")}][!resi][${msg.from}] > GAGAL Dilakukan`
-      );
-      msg.reply("*DATA TIDAK BISA DILACAK!*");
-    }
-  } else if (msg.body == "!resi") {
-    let balas = `_CEK RESI VIA WHATSAPP_\n\nformat cek resi *_!resi kurir nomor resi_*\n\ncontoh > *!resi jnt 6969696969*\n`;
-    msg.reply(balas);
-    console.log(
-      `[${moment().format("hh:mm:ss")}][!resi][${
-        msg.from
-      }] > Berhasil Dilakukan`
-    );
-  } 
- else if (msg.body == "p" ||
-    msg.body === "P") {
-    // Send a new message to the same chat
-    client.sendMessage(msg.from, "kok");
-  } else if (msg.body == " assallamuallaikum") {
-    client.sendMesssage(msg.from, "Waalaikumusallam");
-  } else if (msg.body.startsWith("!sendto ")) {
-    // Direct send a new message to specific id
-    let number = msg.body.split(" ")[1];
-    let messageIndex = msg.body.indexOf(number) + number.length;
-    let message = msg.body.slice(messageIndex, msg.body.length);
-    number = number.includes("@c.us") ? number : `${number}@c.us`;
-    let chat = await msg.getChat();
-    chat.sendSeen();
-    client.sendMessage(number, message);
-  } else if (msg.body == "!chats") {
-    const chats = await client.getChats();
-    client.sendMessage(msg.from, `The bot has ${chats.length} chats open.`);
-  } else if (msg.body == "info" || msg.body == "!help" || msg.body == "!menu") {
-    let localData = client.localData;
-    // console.log(localData);
-    client.sendMessage(
-      msg.from,
-      `  
-◦•●◉✿ ஜ۩۞۩ஜ 𝐈𝐧𝐬𝐢𝐝𝐞 𝐁𝐨𝐭 ஜ۩۞۩ஜ  ✿◉●•◦
-
   
+else if (msg.body.startsWith("!chord ")) {
 
-
-👾 List Menu Bot :
-
- ◦🌉 *_ɦσɾσรcσρε* ~_ 
-
-🌠 *!nama* <nama>
- *_cari arti dari namamu_* 
-
- contoh _!nama Maudy Ayunda_ 
- 
- 🌠 *!quotes*
- *_random quotes dari tokoh terkenal_* 
-
-🌠 *!sifat* [nama] tt-mm-yy
- *_cari sifat berdasarkan nama dan tanggal lahir_* 
-
- contoh _!sifat [Maudy Ayunda] 31-08-199_ 
-
-🌠 *!sial* tt mm yy
- *_cek hari apes mu_* 
-
- contoh _!sial 17 08 1945_ 
-
-🌠 *!pasangan* namamu & pasanganmu
- *_Cek kecocokan jodoh_* 
-
- contoh _!pasangan Riska & Ali_ 
-
-🗃 *_ժօաղlօαժҽɾ* ~_
-
-🔖 *!fb* <url>
- *downloader facebook_* 
- 
-🔖 *!ig* <url>
- *downloader instagram* 
-
-🔖 *!ytmp3* <url>
- *konversi youtube ke mp3_* 
-
-
-              🅜🅞🅡🅔    
-   🅕🅔🅐🅣🅤🅡🅔🅢 🅘🅢 
-🅒🅞🅞🅜🅘🅝🅖 🅢🅞🅞🅝
-
- _Powered By_ : 💞 *InsideHeartz*
-
-`
-    );
-  } else if (msg.body == "!localData") {
-    let localData = client.localData;
-    // console.log(localData);
-    client.sendMessage(
-      msg.from,
-      `
-            *Connection localData*
-            User name: ${localData.pushname}
-            My number: ${localData.me.user}
-            Device: ${localData.phone.device_manufacturer} | ${localData.phone.device_model}
-            Platform: ${localData.platform} ${localData.phone.os_version} 
-            WhatsApp version: ${localData.phone.wa_version}
-        `
-    );
-  } else if (msg.body == "!medial" && msg.hasMedia) {
-    const attachmentData = await msg.downloadMedia();
-    // console.log(attachmentData)
-    msg.reply(`
-            *Media localData*
-            MimeType: ${attachmentData.mimetype}
-            Filename: ${attachmentData.filename}
-            Data (length): ${attachmentData.data.length}
-        `);
-  } else if (msg.body == "!quotel" && msg.hasQuotedMsg) {
-    const quotedMsg = await msg.getQuotedMessage();
-
-    quotedMsg.reply(`
-            ID: ${quotedMsg.id._serialized}
-            Type: ${quotedMsg.type}
-            Author: ${quotedMsg.author || quotedMsg.from}
-            Timestamp: ${quotedMsg.timestamp}
-            Has Media? ${quotedMsg.hasMedia}
-        `);
-  } else if (msg.body == "!resendmedia" && msg.hasQuotedMsg) {
-    const quotedMsg = await msg.getQuotedMessage();
-    if (quotedMsg.hasMedia) {
-      const attachmentData = await quotedMsg.downloadMedia();
-      client.sendMessage(msg.from, attachmentData, {
-        caption: "Here's your requested media."
-      });
-    }
-  } else if (msg.body == "!location") {
-    msg.reply(
-      new Location(37.422, -122.084, "Googleplex\nGoogle Headquarters")
-    );
-  } else if (msg.body == "!mention") {
-    const contact = await msg.getContact();
-    const chat = await msg.getChat();
-    chat.sendMessage(`Hi @${contact.number}!`, {
-      mentions: [contact]
-    });
-  } else if (msg.body == "!delete" && msg.hasQuotedMsg) {
-    const quotedMsg = await msg.getQuotedMessage();
-    if (quotedMsg.fromMe) {
-      quotedMsg.delete(true);
-    } else {
-      msg.reply("I can only delete my own messages");
-    }
-  } else if (msg.body === "!archive") {
-    const chat = await msg.getChat();
-    chat.archive();  
-
-  } else if (msg.body === "!recording") {
-    const chat = await msg.getChat();
-    // simulates recording audio in the chat
-    chat.sendStateRecording();
-  } else if (msg.body === "!clearstate") {
-    const chat = await msg.getChat();
-    // stops typing or recording in the chat
-    chat.clearState();
-  } else if (msg.body === "!mati") {
-    let chat = await msg.getChat();
-    if (chat.isGroup) {
-      msg.reply("Maaf, perintah ini tidak bisa digunakan di dalam grup!");
-    } else {
-      User.checkUser(msg.from).then(result => {
-        if (result) {
-          User.removeUser(msg.from).then(result => {
-            if (result) {
-              client.sendMessage(
-                msg.from,
-                "Berhasil menonaktifkan, anda tidak akan mendapat notifikasi lagi."
-              );
-            } else {
-              client.sendMessage(
-                msg.from,
-                "Gagal menonaktifkan, nomor tidak terdaftar."
-              );
-            }
-          });
-        } else {
-          client.sendMessage(
-            msg.from,
-            "Gagal menonaktifkan, nomor tidak terdaftar."
-          );
-        }
-      });
-    }
-  } else if (msg.body === "!aktif" || msg.body === "!daftar") {
-    let chat = await msg.getChat();
-    if (chat.isGroup) {
-      msg.reply("Maaf, perintah ini tidak bisa digunakan di dalam grup!");
-    } else {
-      User.addUser(msg.from).then(result => {
-        if (!result) {
-          client.sendMessage(msg.from, "Notifikasi sudah aktif.");
-        } else {
-          client.sendMessage(msg.from, "Berhasil mengaktifkan notifikasi.");
-        }
-      });
-    }
-  } else if (msg.body === "!coronaOld") {
-    fs.readFile("./CoronaService/data.json", "utf-8", function(err, data) {
-      if (err) throw err;
-      const localData = JSON.parse(data);
-      const newCases = localData.NewCases === "" ? 0 : localData.NewCases;
-      const newDeaths = localData.NewDeaths === "" ? 0 : localData.NewDeaths;
-      client.sendMessage(
-        msg.from,
-        `                *COVID-19 Update!!*
-Negara: ${localData.Country}
-
-*Kasus aktif: ${localData.ActiveCases}*
-*Total Kasus: ${localData.TotalCases}*
-Kasus Baru: ${newCases}
-
-*Meninggal: ${localData.TotalDeaths}*
-Meninggal Baru: ${newDeaths}
-
-*Total Sembuh: ${localData.TotalRecovered}*
-            
-Sumber: _https://www.worldometers.info/coronavirus/_
-            `
-      );
-      var imageAsBase64 = fs.readFileSync(
-        "./CoronaService/corona.png",
-        "base64"
-      );
-      var CoronaImage = new MessageMedia("image/png", imageAsBase64);
-      client.sendMessage(msg.from, CoronaImage);
-    });
-  } else if (
-    msg.body === "!corona" ||
-    msg.body === "Corona" ||
-    msg.body === "/corona"
-  ) {
-    corona.getAll().then(result => {
-      var aktifIndo =
-        result[0].confirmed - result[0].recovered - result[0].deaths;
-      // var aktifGlob = result[1].confirmed - result[1].recovered - result[1].
-      // Kasus *Global*
-      // Total Kasus: ${result[1].confirmed}
-      // Kasus aktif: ${aktifGlob}
-      // Sembuh: ${result[1].recovered}
-      // Meninggal: ${result[1].deaths}
-      // Update Pada:
-      // ${result[1].lastUpdate}
-      client.sendMessage(
-        msg.from,
-        `
-                    *COVID-19 Update!!*
-
-Kasus *Indonesia* 🇮🇩
-
-😞 Total Kasus: ${result[0].confirmed}
-😷 Kasus aktif: ${aktifIndo}
-😊 Sembuh: ${result[0].recovered}
-😭 Meninggal: ${result[0].deaths}
-
-🕓 Update Pada: 
-${result[0].lastUpdate.replace("pukul", "|")} WIB
-     
-
-Stay safe ya semuanya , jaga kesehatan nya masing masing`
-      );
-      var imageAsBase64 = fs.readFileSync(
-        "./CoronaService/corona.png",
-        "base64"
-      );
-      var CoronaImage = new MessageMedia("image/png", imageAsBase64);
-      client.sendMessage(msg.from, CoronaImage);
-    });
-
-    // ============================================= Groups
-  } else if (msg.body.startsWith("!subject ")) {
-    // Change the group subject
-    let chat = await msg.getChat();
-    if (chat.isGroup) {
-      let newSubject = msg.body.slice(9);
-      chat.setSubject(newSubject);
-    } else {
-      msg.reply("This command can only be used in a group!");
-    }
-  } else if (msg.body.startsWith("!echo ")) {
-    // Replies with the same message
-    msg.reply(msg.body.slice(6));
-  } else if (msg.body.startsWith("!desc ")) {
-    // Change the group description
-    let chat = await msg.getChat();
-    if (chat.isGroup) {
-      let newDescription = msg.body.slice(6);
-      chat.setDescription(newDescription);
-    } else {
-      msg.reply("This command can only be used in a group!");
-    }
-  } else if (msg.body.startsWith("baca ")) {
-    const newStatus = msg.body.split(" ")[1];
-    const fetch = require("node-fetch");
-    let url =
-      "https://al-quran-8d642.firebaseio.com/surat/" +
-      newStatus +
-      ".json?print=pretty";
-
-    fetch(url)
-      .then(res => {
-        return res.json();
-      })
-      .then(resJSON => {
-        resJSON.forEach(item => {
-          client.sendMessage(
-            msg.from,
-            `
-  Ayat ۝, :  
-       *${item.ar}*
-  ----------------------------------
-  Terjemah : 
-       _${item.id}_
-  ----------------------------------
-
-  _Al-Quran WhatsApp By Abdul Muttaqin_
-`
-          );
-        });
-      });
-  } else if (msg.body == "!leave") {
-    // Leave the group
-    let chat = await msg.getChat();
-    if (chat.isGroup) {
-      chat.leave();
-    } else {
-      msg.reply("This command can only be used in a group!");
-    }
-  } else if (msg.body.startsWith("!join ")) {
-    const inviteCode = msg.body.split(" ")[1];
-    try {
-      await client.acceptInvite(inviteCode);
-      msg.reply("Joined the group!");
-    } catch (e) {
-      msg.reply("That invite code seems to be invalid.");
-    }
-  } else if (msg.body == "!grouplocalData") {
-    let chat = await msg.getChat();
-    if (chat.isGroup) {
-      msg.reply(`
-                *Group Details*
-                Name: ${chat.name}
-                Description: ${chat.description}
-                Created At: ${chat.createdAt.toString()}
-                Created By: ${chat.owner.user}
-                Participant count: ${chat.participants.length}
-            `);
-    } else {
-      msg.reply("This command can only be used in a group!");
-    }
+function foreach(arr, func){
+  for(var i in arr){
+    func(i, arr[i]);
   }
+}
+var hal = msg.body.split("!chord ")[1];
+var url = "http://app.chordindonesia.com/?json=get_search_results&exclude=date,modified,attachments,comment_count,comment_status,thumbnail,thumbnail_images,author,excerpt,content,categories,tags,comments,custom_fields&search="+ hal;
+axios.get(url)
+  .then((result) => {
+var d = JSON.parse(JSON.stringify(result.data));
+if (d.count == "0"){
+msg.reply("maaf lirik tidak ditemukan");
+}else{
+
+//console.log(d)
+var result =[];
+var y = 0;
+var nomor ="";
+
+foreach(d.posts, function(i, v){
+var no = d.posts[i].id;
+nomor += y++;
+result += " ID *["+ no + "]*  Judul : "+ d.posts[i].title +"\n\n";
 });
 
-listen.on("message", (topic, message) => {
-  console.log(`[ ${moment().format("HH:mm:ss")} ] MQTT: ${message.toString()}`);
-  fs.readFile("./CoronaService/user.json", "utf-8", function(err, data) {
-    if (err) throw err;
-    const userData = JSON.parse(data);
-    for (var i = 0; i < userData.length; i++) {
-      let number = userData[i].user;
-      // number = number.includes('@c.us') ? number : `${number}@c.us`;
-      setTimeout(function() {
-        console.log(
-          `[ ${moment().format("HH:mm:ss")} ] Send Corona Update to ${number}`
-        );
-        if (message.toString() === "New Update!") {
-          fs.readFile("./CoronaService/data.json", "utf-8", function(
-            err,
-            data
-          ) {
-            if (err) throw err;
-            const localData = JSON.parse(data);
-            const newCases = localData.NewCases === "" ? 0 : localData.NewCases;
-            const newDeaths =
-              localData.NewDeaths === "" ? 0 : localData.NewDeaths;
-            client.sendMessage(
-              number,
-              `
-                    *COVID-19 Update!!*
-Negara: ${localData.Country}
+var g = result.replace(/&#8211;/g, " - ");
+client.sendMessage(
+      msg.from, `
+	  *Hasil Pencarian Yang Ditemukan*
+	  
+${g}
 
-Kasus aktif: ${localData.ActiveCases}
-Total Kasus: ${localData.TotalCases}
-*Kasus Baru: ${newCases}*
-        
-Meninggal: ${localData.TotalDeaths}
-*Meninggal Baru: ${newDeaths}*
-        
-Total Sembuh: ${localData.TotalRecovered}
-                    
-Dicek pada: ${moment()
-                .format("LLLL")
-                .replace("pukul", "|")} WIB
-Sumber: 
-_https://www.worldometers.info/coronavirus/_
-                    `
-            );
-          });
-        }
-        // Delay 3 Sec
-      }, i * 3000);
-    }
-  });
+Silahkan pilih lagu , lalu ketik 
+
+*!getchord ID nya*
+`);
+
+}
+})
+  .catch((err) => {
+console.log(err);
+  })
+}
+
+// Get Chord
+   else if (msg.body.startsWith("!getchord ")) {
+
+const htmlToText = require('html-to-text');
+
+var id = msg.body.split("!chord ")[1];
+  var url = "http://app.chordindonesia.com/?json=get_post&id="+ id;
+axios.get(url)
+  .then((result) => {
+var d = JSON.parse(JSON.stringify(result.data));
+var html = d.post.content;
+const text = htmlToText.fromString(html, {
+noLinkBrackets: true,
+ignoreHref: true,
+ignoreImage:true
 });
+client.sendMessage(
+      msg.from, `
+	  ${text}
+	  `);
+
+});
+}
+
+
+//=====  Berita Indonesia
+
+	  else if (msg.body.startsWith("!berita ")) {
+	   const keyword = msg.body.split("!berita ")[1];
+const { Detik } = require('indo-news-scraper');
+const imageToBase64 = require('image-to-base64');
+var nomorlink = Math.floor(Math.random() * 5);
+Detik.scrap(keyword).then(res => {
+ console.log(res);
+ var gambar = res[0].img;
+ var judul = res[0].title;
+ var url = res[0].url;
+ 
+   imageToBase64(gambar) // Path to the image
+        .then(
+            (response) => {
+ 
+    const media = new MessageMedia('image/jpeg', response);
+    client.sendMessage(msg.from, media, {
+      caption: `
+Judul Berita :
+ *${judul}*
+
+Baca Berita Disini:
+${url}
+` });
+            }
+			
+        )
+        .catch(
+            (error) => {
+                console.log(error); // Logs an error if there was one
+            }
+        )
+    
+});
+   }
+
+
+// === Edukasi menu
+
+else if (msg.body.startsWith("!wiki ")) {
+const cheerio = require('cheerio');
+const request = require('request');
+var yos = msg.body.split("!wiki ")[1]
+var jokowi = urlencode(yos.replace(/ /g, "%20"));
+var url = "https://id.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles="+ jokowi
+axios.get(url)
+  .then((result) => {
+var d = JSON.parse(JSON.stringify(result.data));
+console.log(d.query.normalized[0]);
+var id = d.query.pages;
+id = Object.keys(id)[0];
+//console.log(d.query.pages[id].extract);
+msg.reply(d.query.pages[id].extract)
+});
+
+}
+  
+// Chat Bot SimSimi
+
+// FITUR PREMIUM INI HEHE
+	
+	// Soalnya pake API PREMIUM >:(
+
+else if (msg.body) {
+   if (chat.isGroup) {
+	   //
+   }else{
+var teks = msg.body;
+const gan = require("urlencode");
+const regex = gan(teks);
+
+
+var url = "https://simsumi.herokuapp.com/api?text="+ regex +"&lang=ina";
+
+axios.get(url)
+  .then((result) => {
+   var b = JSON.parse(JSON.stringify(result.data));
+if (b.success == ""){
+	msg.reply(" Maaf kak , simi ga ngerti \n coba ketik *!menu* untuk nikmatin fitur lain ");
+	
+}else{
+client.sendMessage(
+      msg.from,b.success)
+}
+})
+  .catch((err) => {
+console.log(err);
+  })
+   }
+  }
+  
+  
+  
+})
