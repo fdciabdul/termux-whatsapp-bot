@@ -28,7 +28,8 @@ client = new Client({
 	     puppeteer: {
         executablePath: config.chrome_path,
         headless: false,
-		args: [
+      ignoreDefaultArgs: [
+      "--disable-extensions",
       "--disable-default-apps",
       "--enable-features=NetworkService",
       "--disable-setuid-sandbox",
