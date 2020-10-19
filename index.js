@@ -1269,40 +1269,6 @@ msg.reply(d.query.pages[id].extract)
 
 }
   
-// Chat Bot SimSimi
-
-// FITUR PREMIUM INI HEHE
-	
-	// Soalnya pake API PREMIUM >:(
-
-else if (msg.body) {
-   if (chat.isGroup) {
-	   //
-   }else{
-var teks = msg.body;
-const gan = require("urlencode");
-const regex = gan(teks);
-
-
-var url = "https://simsumi.herokuapp.com/api?text="+ regex +"&lang=ina";
-
-axios.get(url)
-  .then((result) => {
-   var b = JSON.parse(JSON.stringify(result.data));
-if (b.success == ""){
-	msg.reply(" Maaf kak , simi ga ngerti \n coba ketik *!menu* untuk nikmatin fitur lain ");
-	
-}else{
-client.sendMessage(
-      msg.from,b.success)
-}
-})
-  .catch((err) => {
-console.log(err);
-  })
-   }
-  }
-  
-  
+// 
   
 })
