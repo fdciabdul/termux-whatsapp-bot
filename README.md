@@ -14,27 +14,12 @@ This is a bot , sure this is a bot !
 
 copy paste command below
 
-```bash
-> pkg update -y && pkg install curl proot tar -y && curl https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Ubuntu/ubuntu-xfce.sh | bash
-```
-it'll take a long times you know
-
-<img src="https://telegra.ph/file/af3e0d8e36c637b4a5c0d.jpg"/>
-
-and please be patient , because if you close termux , the file will be corrupt or crash
-```bash
+l```bash
 > git clone https://github.com/fdciabdul/termux-whatsapp-bot
 > cd termux-whatsapp-bot
 > bash install.sh
 
 ```
-
-Install the dependencies:
-
-```bash
-> npm i
-```
-
 
 
 ### Usage
@@ -47,4 +32,14 @@ Install the dependencies:
 after running it you need to scan the qr
 
 
+features :
 
+- Sticker 
+
+- Nama 
+
+- Nulis
+
+- Random pantun
+
+more features was coming soon
