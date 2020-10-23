@@ -14,7 +14,7 @@ This is a bot , sure this is a bot !
 
 copy paste command below
 
-l```bash
+```bash
 > git clone https://github.com/fdciabdul/termux-whatsapp-bot
 > cd termux-whatsapp-bot
 > bash install.sh
