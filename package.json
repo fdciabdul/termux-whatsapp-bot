@@ -1,37 +1,40 @@
 {
-  "name": "fdciabdull",
+  "name": "tmuxwabot",
   "version": "1.0.0",
-  "description": "Multi functional whatsapp bot",
+  "description": "whatsappbot termux",
   "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
   "dependencies": {
-    "asciiart-logo": "^0.2.6",
-    "axios": "^0.20.0",
+    "@adiwajshing/baileys": "^3.2.1",
+    "brainly-scraper": "^1.0.2",
     "cheerio": "^1.0.0-rc.3",
-    "delay": "^4.4.0",
-    "image-to-base64": "^2.1.1",
+    "cloudconvert": "^2.1.5",
+    "gulp": "^4.0.2",
+    "gulp-webp": "^4.0.1",
     "moment": "^2.29.1",
-    "node-fetch": "^2.6.1",
-    "qrcode-terminal": "^0.12.0",
     "request": "^2.88.2",
+    "text-to-mp3": "^1.0.4",
     "urlencode": "^1.1.0",
-    "whatsapp-web.js": "^1.7.5",
-    "youtube-mp3-downloader": "^0.6.8"
+    "webp-simple-converter": "^0.0.6",
+    "ytdl-core": "^3.4.2"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "node index.js"
+    "test": "node index"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fdciabdul/multi-whatsapp-bot.git"
+    "url": "git+https://github.com/fdciabdul/termux-whatsapp-bot.git"
   },
   "keywords": [
-    "wabot"
+    "k"
   ],
   "author": "Abdul Muttaqin",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/fdciabdul/multi-whatsapp-bot/issues"
+    "url": "https://github.com/fdciabdul/termux-whatsapp-bot/issues"
   },
-  "homepage": "https://github.com/fdciabdul/multi-whatsapp-bot#readme"
+  "homepage": "https://github.com/fdciabdul/termux-whatsapp-bot#readme"
 }
