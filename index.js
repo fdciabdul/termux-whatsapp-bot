@@ -3,10 +3,11 @@ const moment = require("moment");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const dl = require("./lib/downloadImage.js");
-const webp = require('webp-simple-converter');
 const fetch = require('node-fetch');
 const urlencode = require("urlencode");
 const axios = require("axios");
+const imageToBase64 = require('image-to-base64');
+const menu = require("./menu.js");
 const
 {
    WAConnection,
@@ -66,6 +67,50 @@ conn.on('message-new', async(m) =>
    const messageType = Object.keys(messageContent)[0] // message will always contain one key signifying what kind of message
    let imageMessage = m.message.imageMessage;
    console.log(`[ ${moment().format("HH:mm:ss")} ] (${id.split("@s.whatsapp.net")[0]} => ${text}`);
+
+
+// Groups
+
+if (text.includes("!buatgrup"))
+   {
+var nama = text.split("!buatgrup")[1].split("-nomor")[0];
+var nom = text.split("-nomor")[1];
+var numArray = nom.split(",");
+for ( var i = 0; i < numArray.length; i++ ) {
+    numArray[i] = numArray[i] +"@s.whatsapp.net";
+}
+var str = numArray.join("");
+console.log(str)
+const group = await conn.groupCreate (nama, str)
+console.log ("created group with id: " + group.gid)
+conn.sendMessage(group.gid, "hello everyone", MessageType.extendedText) // say hello to everyone on the group
+
+}
+
+// FF
+if(text.includes("!cek")){
+var num = text.replace(/!cek/ , "")
+var idn = num.replace("0","+62");
+
+console.log(id);
+const gg = idn+'@s.whatsapp.net'
+
+const exists = await conn.isOnWhatsApp (gg)
+console.log(exists);
+conn.sendMessage(id ,`${gg} ${exists ? " exists " : " does not exist"} on WhatsApp`, MessageType.text)
+}
+if (text == '!menu'){
+conn.sendMessage(id, menu.menu ,MessageType.text);
+}
+else if (text == '!menu1'){
+conn.sendMessage(id, menu.menu1 ,MessageType.text);
+}
+else if (text == '!menu2'){
+conn.sendMessage(id, menu.menu2 ,MessageType.text);
+}
+else if (text == '!menu3'){
+conn.sendMessage(id, menu.menu3 ,MessageType.text);
+}
 
    if (messageType == 'imageMessage')
    {
@@ -155,7 +200,8 @@ conn.on('message-new', async(m) =>
 
             os.execCommand('ytdl ' + url + ' -q highest -o mp4/' + videoid[1] + '.mp4').then(res =>
             {
-               conn.sendMessage(id, 'mp4/' + videoid[1] + '.mp4', MessageType.video)
+		const buffer = fs.readFileSync("mp4/"+ videoid[1] +".mp4")
+               conn.sendMessage(id, buffer, MessageType.video)
             }).catch(err =>
             {
                console.log("os >>>", err);
@@ -228,19 +274,83 @@ conn.on('message-new', async(m) =>
          });
    }
 
-   if (text.includes("!lirik"))
+   if (text.includes("!yt"))
    {
-      var nama = text.replace("!nama", "");
-      var req = urlencode(nama);
-      var url = "http://tololbgt.coolpage.biz/lirik.php?judul=" + req;
-      axios.get(url)
-         .then((result) =>
-         {
+    var items = ["ullzang girl", "cewe cantik", "hijab cantik", "korean girl"];
+    var cewe = items[Math.floor(Math.random() * items.length)];
+    var url = "https://api.fdci.se/rep.php?gambar=" + cewe;
+    
+    axios.get(url)
+      .then((result) => {
+        var b = JSON.parse(JSON.stringify(result.data));
+        var cewek =  b[Math.floor(Math.random() * b.length)];
+        imageToBase64(cewek) // Path to the image
+        .then(
+            (response) => {
+	var buf = Buffer.from(response, 'base64'); // Ta-da	
+              conn.sendMessage(
+            id,
+              buf,MessageType.image)
+       
+            }
+        )
+        .catch(
+            (error) => {
+                console.log(error); // Logs an error if there was one
+            }
+        )
+    
+    });
+    }
 
-            conn.sendMessage(id, result.data.replace(/pjr-enter/g, "\n"), MessageType.text);
-         });
-   }
+if (text.includes("!scdl")){
+const fs = require("fs");
+const scdl = require("./lib/scdl");
+
+scdl.setClientID("iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX");
+
+scdl("https://m.soundcloud.com/abdul-muttaqin-701361735/lucid-dreams-gustixa-ft-vict-molina")
+    .pipe(fs.createWriteStream("mp3/song.mp3"));
+}
+
+
+
+ else if (text.includes("!tts")) {
+  var teks = text.split("!ttsid ")[1];
+  var path = require('path');
+  var text1 = teks.slice(6);
+  text1 = suara;
+  var suara = text.replace(/!ttsid/g, text1);
+  var filepath = 'mp3/bacot.wav';
+  
+  
+/*
+ * save audio file
+ */
+
+gtts.save(filepath, suara, function() {
+  console.log(`${filepath} MP3 SAVED!`)
+});
+await new Promise(resolve => setTimeout(resolve, 500));
+
+	if(suara.length > 200){ // check longness of text, because otherways google translate will give me a empty file
+  msg.reply("Text to long, split in text of 200 characters")
+}else{
+
+const buffer = fs.readFileSync(filepath)
+	conn.sendMessage(id , buffer , MessageType.audio);
+
+};
+
+
+}
+
+
+
+
 
 
    // end of file
+
+
 })
