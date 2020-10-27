@@ -1,7 +1,7 @@
 ## 
 
-WhatsApp Bot For Termux
-<img src="https://telegra.ph/file/50d676d2ce8c15f21dc83.png">
+Ikuno 
+<img src="https://www.pngkey.com/png/full/824-8245235_if-you-just-want-crazy-anime.png" width="300" >
 
 
 ![Twitter](https://img.shields.io/twitter/follow/fdciabdul?style=flat-square)
