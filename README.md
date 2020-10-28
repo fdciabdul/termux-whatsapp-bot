@@ -1,4 +1,4 @@
-## Ikuno 
+## Termux WhatsApp Bot 
 
 A Lightweight WhatApp Bot Without Headless Browser
 
