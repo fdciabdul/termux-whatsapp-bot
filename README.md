@@ -45,8 +45,9 @@ Clone the project and run
 after running it you need to scan the qr
 
 
-features :
+## features 
 
+```bash
 > Sticker 
 
 > Nama 
@@ -60,5 +61,6 @@ features :
 > Youtube Downloader
 
 > Youtube MP3
+```
 
 more features was coming soon
