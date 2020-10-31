@@ -103,7 +103,7 @@ if (text == '!menu'){
 conn.sendMessage(id, menu.menu ,MessageType.text);
 }
 else if (text == '!menu1'){
-conn.sendMessage(id, menu.menu1 ,MessageType.text);
+conn.sendMessage(id, menu.menu1 ,MessageType.text); OMEGABARBAR BOT SIAP MELAYANI KALIAN
 }
 else if (text == '!menu2'){
 conn.sendMessage(id, menu.menu2 ,MessageType.text);
