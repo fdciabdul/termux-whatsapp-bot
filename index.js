@@ -374,6 +374,27 @@ const buffer = fs.readFileSync(filepath)
 
 }
 
+// Bot Toxic
+if (messageType === MessageType.text)
+   {
+      let is = m.message.conversation.toLocaleLowerCase()
+
+      if (is == '!toxic')
+      {
+
+         fetch('https://raw.githubusercontent.com/BerTren-Nation/filekebutuhan/main/Toxicbotnya')
+            .then(res => res.text())
+            .then(body =>
+            {
+               let mek = body.split("\n");
+               let gg = mek[Math.floor(Math.random() * mek.length)];
+               let ajg = gg.replace(/angga-line/g, "\n");
+               conn.sendMessage(id, ajg, MessageType.text)
+                  });
+      }
+
+   }
+
 
 
 
