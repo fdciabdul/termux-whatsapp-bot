@@ -1,5 +1,5 @@
-module.exports = {
-	menu: "┏━┅┅┄┄⟞⟦✮⟧⟝┄┄┉┉━┓
+exports.menu = (id, BotName, corohelp, tampilTanggal, tampilWaktu, instagram, whatsapp, kapanbotaktif, grupch1, grupch2) => {
+	return `┏━┅┅┄┄⟞⟦✮⟧⟝┄┄┉┉━┓
  ⠀⠀⠀⠀ ∆𝚂𝚃𝚁𝙾 𝙱𝙾𝚃
 ┗━┅┅┄┄⟞⟦✮⟧⟝┄┄┉┉━┛
 
@@ -18,5 +18,5 @@ module.exports = {
 ━──────◅▻♢◅▻──────━
 
 ◈▷ Grupo Do Bot : https://chat.whatsapp.com/Gk1M5x5XhQ0GeVLSEG7AEg
-"
+`
 }
