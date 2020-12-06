@@ -1,4 +1,4 @@
-exports.menu = (id, BotName, corohelp, tampilTanggal, tampilWaktu, instagram, whatsapp, kapanbotaktif, grupch1, grupch2) => {
+exports.menu = {
 	return `┏━┅┅┄┄⟞⟦✮⟧⟝┄┄┉┉━┓
  ⠀⠀⠀⠀ ∆𝚂𝚃𝚁𝙾 𝙱𝙾𝚃
 ┗━┅┅┄┄⟞⟦✮⟧⟝┄┄┉┉━┛
