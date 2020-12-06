@@ -171,7 +171,7 @@ conn.sendMessage(id, menu.menu3 ,MessageType.text);
       {
          if (info.length_seconds > 1000)
          {
-            conn.sendMessage(id, " videonya kepanjangan", MessageType.text)
+            conn.sendMessage(id, "O vídeo é muito longo.", MessageType.text)
          }
          else
          {
