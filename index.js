@@ -165,13 +165,13 @@ conn.sendMessage(id, menu.menu3 ,MessageType.text);
       }
       else
       {
-         conn.sendMessage(id, "🇧🇷 : COLOQUE !yt + Link Do Vídeo para baixar um vídeo! | 🇪🇸 : Put !yt + Enlace de video para descargar un video!", MessageType.text)
+         conn.sendMessage(id, "gavalid", MessageType.text)
       }
       ytdl.getInfo(videoid[1]).then(info =>
       {
          if (info.length_seconds > 1000)
          {
-            conn.sendMessage(id, "O vídeo é muito longo.", MessageType.text)
+            conn.sendMessage(id, " videonya kepanjangan", MessageType.text)
          }
          else
          {
@@ -378,7 +378,8 @@ const buffer = fs.readFileSync(filepath)
 
 
 
+
    // end of file
 
 
-})
+}) 
