@@ -374,12 +374,6 @@ const buffer = fs.readFileSync(filepath)
 
 }
 
-if (text.includes("!say")){
-  const teks = text.replace(/!say /, "")
-conn.sendMessage(id, teks, MessageType.text)
-}
-
-
 
 
 
