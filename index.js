@@ -165,7 +165,7 @@ conn.sendMessage(id, menu.menu3 ,MessageType.text);
       }
       else
       {
-         conn.sendMessage(id, "gavalid", MessageType.text)
+         conn.sendMessage(id, "🇧🇷 : COLOQUE !yt + Link Do Vídeo para baixar um vídeo! | 🇪🇸 : Put !yt + Enlace de video para descargar un video!", MessageType.text)
       }
       ytdl.getInfo(videoid[1]).then(info =>
       {
@@ -372,6 +372,11 @@ const buffer = fs.readFileSync(filepath)
 };
 
 
+}
+
+if (text.includes("!say")){
+  const teks = text.replace(/!say /, "")
+conn.sendMessage(id, teks, MessageType.text)
 }
 
 
