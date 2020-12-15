@@ -60,7 +60,6 @@ after running it you need to scan the qr
 
 > Youtube Downloader
 
-> Youtube MP3
 ```
 
 more features was coming soon
