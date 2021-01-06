@@ -1,0 +1,14 @@
+{
+    "name": "fdciabdul/tmuxwabot",
+    "description": "termux whatsapp bot",
+    "type": "library",
+    "license": "ISC",
+    "authors": [
+        {
+            "name": "Abdul Muttaqin",
+            "email": "abdulmuttaqin456@gmail.com"
+        }
+    ],
+    "minimum-stability": "beta",
+    "require": {}
+}
