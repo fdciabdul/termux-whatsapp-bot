@@ -1,9 +1,6 @@
-apt upgrade
-apt install
-apt install wget -y
-apt install ffmpeg -y
-apt install nodejs -y
+pkg install tesseract
 npm i -g cwebp
-npm i -g ytdl 
+npm i -g ytdl
+npm i node-tesseract-ocr
 npm i
-npm update
+npm i got
