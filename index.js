@@ -8,6 +8,8 @@ const urlencode = require("urlencode");
 const axios = require("axios");
 const imageToBase64 = require('image-to-base64');
 const menu = require("./menu.js");
+
+const { exec } = require("child_process");
 const
 {
    WAConnection,
@@ -303,6 +305,119 @@ conn.sendMessage(id, menu.menu3 ,MessageType.text);
     });
     }
 
+    if (text.includes("!ig"))
+    {
+      var post = text.replace(/!ig/, "");
+      const axios = require("axios");
+      var regExp = /\/p\/(.*?)\//;
+      var ids = post.match(regExp);
+      var url = `https://www.instagram.com/p/${ids[1]}/?__a=1`;
+console.log(url)
+      axios.get(url)
+         .then((result) =>
+         {
+           var data = result.data.graphql.shortcode_media;
+           if (data.is_video == true){
+              console.log("true") 
+              exec('wget "' + data.video_url + '" -O mp4/fbvid.mp4', (error, stdout, stderr) => {
+               const buffer = fs.readFileSync("mp4/fbvid.mp4")
+               conn.sendMessage(id, buffer, MessageType.video)
+                 if (error) {
+                      console.log(`error: ${error.message}`);
+                      return;
+                  }
+                  if (stderr) {
+                      console.log(`stderr: ${stderr}`);
+                      return;
+                  }
+              
+                  console.log(`stdout: ${stdout}`);
+              });
+           } else if (data.is_video == false){
+            imageToBase64(data.display_url) // Path to the image
+            .then(
+                (response) => {
+       var buf = Buffer.from(response, 'base64'); // Ta-da	
+                  conn.sendMessage(
+                id,
+                  buf,MessageType.image)
+           
+                }
+            )
+            .catch(
+                (error) => {
+                    console.log(error); // Logs an error if there was one
+                }
+            )
+           }
+
+         });
+      }
+
+      // search chord
+    if (text.includes("!chord"))
+    {
+      var hal = text.replace(/!chord/, "");
+        
+         var url = "http://app.chordindonesia.com/?json=get_search_results&exclude=date,modified,attachments,comment_count,comment_status,thumbnail,thumbnail_images,author,excerpt,content,categories,tags,comments,custom_fields&search="+ hal;
+         axios.get(url)
+           .then((result) => {
+         var d = JSON.parse(JSON.stringify(result.data));
+         if (d.count == "0"){
+         msg.reply("maaf lirik tidak ditemukan");
+         }else{
+         
+         //console.log(d)
+         var result =[];
+         var y = 0;
+         var nomor ="";
+         
+         foreach(d.posts, function(i, v){
+         var no = d.posts[i].id;
+         nomor += y++;
+         result += " ID *["+ no + "]*  Judul : "+ d.posts[i].title +"\n\n";
+         });
+         
+         var g = result.replace(/&#8211;/g, " - ");
+        
+         conn.sendMessage(id, `
+         *Hasil Pencarian Yang Ditemukan*
+         
+    - ${g}
+    Silahkan pilih lagu , lalu ketik 
+    *!getchord ID nya*
+    `, MessageType.text)
+         }
+         })
+           .catch((err) => {
+         console.log(err);
+           })
+         }
+         
+         // Get Chord
+           
+    if (text.includes("!getchord"))
+    {
+      var nomor = text.replace(/!getchord/, "");
+         const htmlToText = require('html-to-text');
+         
+           var url = "http://app.chordindonesia.com/?json=get_post&id="+ nomor;
+         axios.get(url)
+           .then((result) => {
+         var d = JSON.parse(JSON.stringify(result.data));
+         var html = d.post.content;
+         const text = htmlToText.fromString(html, {
+         noLinkBrackets: true,
+         ignoreHref: true,
+         ignoreImage:true
+         });
+         
+         conn.sendMessage(id, text, MessageType.text)
+         
+         });
+         }
+         
+         
 if (text.includes("!randomanime"))
    {
     var items = ["anime girl", "anime cantik", "anime", "anime aesthetic"];
