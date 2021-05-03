@@ -1,42 +1,30 @@
 {
-  "name": "tmuxwabot",
-  "version": "1.0.0",
-  "description": "whatsappbot termux",
-  "main": "index.js",
+  "name": "BaseSelfBot",
+  "version": "0.0.1",
+  "description": "Ga ada",
+  "main": "xinz.js",
   "directories": {
     "lib": "lib"
   },
-  "dependencies": {
-    "@adiwajshing/baileys": "^3.2.1",
-    "brainly-scraper": "^1.0.2",
-    "cheerio": "^1.0.0-rc.3",
-    "cloudconvert": "^2.1.5",
-    "gulp": "^4.0.2",
-    "gulp-webp": "^4.0.1",
-    "image-to-base64": "^2.1.1",
-    "moment": "^2.29.1",
-    "node-gtts": "^2.0.2",
-    "request": "^2.88.2",
-    "text-to-mp3": "^1.0.4",
-    "urlencode": "^1.1.0",
-    "webp-simple-converter": "^0.0.6",
-    "ytdl-core": "^3.4.2"
-  },
-  "devDependencies": {},
   "scripts": {
-    "test": "node index"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node xinz.js"
+  },
+  "author": "aqulzz",
+  "dependencies": {
+    "@adiwajshing/baileys": "^3.4.1",
+    "axios": "^0.21.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "moment-timezone": "^0.5.33",
+    "node-fetch": "^2.6.1",
+    "request": "^2.88.2"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fdciabdul/termux-whatsapp-bot.git"
+    "url": "git+https://github.com/zennn08/BaseSelfBot.git"
   },
-  "keywords": [
-    "k"
-  ],
-  "author": "Abdul Muttaqin",
-  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/fdciabdul/termux-whatsapp-bot/issues"
+    "url": "https://github.com/zennn08/BaseSelfBot/issues"
   },
-  "homepage": "https://github.com/fdciabdul/termux-whatsapp-bot#readme"
+  "homepage": "https://github.com/zennn08/BaseSelfBot#readme"
 }
