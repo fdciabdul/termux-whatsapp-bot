@@ -1,11 +1,5 @@
 <div align="center">
-<img src="https://i.ibb.co/xh1jJ9V/c04a33a54164.png" alt="BaseSelfBot" width="300" />
 
-# Base-SelfBot
-
->
->
->
 ## Termux WhatsApp Bot 
 
 A Lightweight WhatApp Bot Without Headless Browser
