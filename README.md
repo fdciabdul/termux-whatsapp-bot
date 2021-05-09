@@ -10,7 +10,7 @@ A Lightweight WhatApp Bot Without Headless Browser
 ![Twitter](https://img.shields.io/twitter/follow/fdciabdul?style=flat-square)
 ![Fork](https://img.shields.io/github/forks/fdciabdul/termux-whatsapp-bot?style=flat-square)
 
- 
+ Join discord for new information , or talk to me https://discord.gg/j3mu7fxweq
 
 ## Installation
 
