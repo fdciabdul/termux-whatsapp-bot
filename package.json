@@ -1,5 +1,5 @@
 {
-  "name": "BaseSelfBot",
+  "name": "KumoBot",
   "version": "0.0.1",
   "description": "Ga ada",
   "main": "xinz.js",
@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node xinz.js"
   },
-  "author": "aqulzz",
+  "author": "Ilman",
   "dependencies": {
     "@adiwajshing/baileys": "^3.4.1",
     "axios": "^0.21.1",
