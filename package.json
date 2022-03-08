@@ -16,7 +16,7 @@
     "axios": "^0.21.1",
     "fluent-ffmpeg": "^2.1.2",
     "moment-timezone": "^0.5.33",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.0.0",
     "request": "^2.88.2"
   },
   "repository": {
