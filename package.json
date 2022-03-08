@@ -12,7 +12,7 @@
   },
   "author": "aqulzz",
   "dependencies": {
-    "@adiwajshing/baileys": "^3.4.1",
+    "@adiwajshing/baileys": "^4.0.0",
     "axios": "^0.21.1",
     "fluent-ffmpeg": "^2.1.2",
     "moment-timezone": "^0.5.33",
